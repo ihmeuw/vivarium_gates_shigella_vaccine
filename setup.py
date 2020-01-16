@@ -24,7 +24,9 @@ if __name__ == "__main__":
         'numpy<=1.15.4',
         'tables<=3.4.0',
         'pandas<0.25',
-
+        'jinja2',
+        'loguru',
+        'click',
       ]
 
     extras_require = [
