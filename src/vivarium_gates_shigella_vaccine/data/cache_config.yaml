@@ -1,0 +1,3 @@
+input_data:
+  cache_data: True
+  intermediary_data_cache_path: /share/scratch/users/{username}/cache
