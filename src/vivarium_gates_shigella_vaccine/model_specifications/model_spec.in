@@ -3,10 +3,12 @@ components:
         population:
             - BasePopulation()
             - Mortality()
+            - FertilityCrudeBirthRate()
         metrics:
             - Disability()
             - MortalityObserver()
-
+            - TreatmentObserver('shigellosis_vaccine')
+            - DiseaseObserver('shigellosis')
     vivarium_gates_shigella_vaccine.components:
 
 configuration:
@@ -16,32 +18,46 @@ configuration:
         artifact_path: /share/costeffectiveness/artifacts/vivarium_gates_shigella_vaccine/{{ location_sanitized }}.hdf
     interpolation:
         order: 0
-        extrapolate: False
+        extrapolate: True
     randomness:
         map_size: 1_000_000
         key_columns: ['entrance_time']
         random_seed: 0
     time:
         start:
-            year: 2005
+            year: 2025
             month: 7
             day: 2
         end:
-            year: 2010
+            year: 2040
             month: 7
             day: 2
         step_size: 1 # Days
     population:
-        population_size: 100
+        population_size: 8000
         age_start: 0
-        age_end: 100
-
+        age_end: 5
+        exit_age: 5
+    shigellosis_vaccine:
+        scenario: nine_twelve_minimal
     metrics:
-        disability:
-            by_age: False
-            by_sex: False
-            by_year: False
+        shigellosis_vaccine_observer:
+                by_age: True
+                by_sex: True
+                by_year: True
+        shigellosis_observer:
+                by_age: True
+                by_sex: True
+                by_year: True
         mortality:
-            by_age: False
-            by_sex: False
-            by_year: False
+                by_age: True
+                by_sex: True
+                by_year: True
+        disability:
+                by_age: True
+                by_sex: True
+                by_year: True
+        yll_forecast_observer:
+                by_age: True
+                by_sex: True
+                by_year: True
