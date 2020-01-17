@@ -64,6 +64,6 @@ if __name__ == "__main__":
 
         entry_points='''
             [console_scripts]
-            make_specs=vivarium_gates_shigella_vaccine.tools.cli:make_specs
+            make_specs=vivarium_gates_shigella_vaccine.cli:make_specs
         '''
     )
