@@ -5,21 +5,6 @@ import xarray as xr
 
 from .utilities import get_input_config, get_cache_directory
 
-config = get_input_config()
-if config.input_data.cache_data:
-    from joblib import Memory
-    memory = Memory(cachedir=get_cache_directory(config))
-else:
-    class Memory:
-        """Memory mock."""
-
-        def cache(self, f):
-            """Cache mock."""
-            return f
-
-    memory = Memory()
-
-
 # for now, use reference scenario: 0
 FORECASTING_SCENARIO = 0
 GBD_ROUND_ID = 4
@@ -58,7 +43,6 @@ FORECASTING_DATA_PATH = '/share/costeffectiveness/auxiliary_data/GBD_2016/00_ext
 FORECASTING_CAUSE_SET_ID = 6
 
 
-@memory.cache
 def get_entity_measure(entity, measure: str, location_id: int) -> pd.DataFrame:
     """Loads measure data for an entity."""
 
