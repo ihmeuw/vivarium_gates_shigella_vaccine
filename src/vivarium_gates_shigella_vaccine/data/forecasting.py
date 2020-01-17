@@ -1,6 +1,5 @@
 import math
 from pathlib import Path
-from typing import NamedTuple
 
 from loguru import logger
 import numpy as np
@@ -23,6 +22,7 @@ class DataMissingError(Exception):
 
 
 def get_location_id_subset():
+    """Uses this repo's locations file to get appropriate location ids."""
     locations = open("locations.txt").read().strip().split("\n")
     ids = get_location_ids()
     ids = ids.loc[ids.location_name.isin(locations)]
@@ -32,6 +32,7 @@ def get_location_id_subset():
 
 
 def get_formatted_lex():
+    """Loads formatted country specific life expectancy table."""
     logger.info("Reading and formatting forecasted life expectancy data")
 
     path = Path(__file__).resolve().parent / "life_expectancy_with_forecasted_data_12.23.19.csv"
@@ -106,8 +107,8 @@ entity_map = {
 }
 
 
-
 def load_forecast(entity_key: EntityKey, location: str):
+    """Load forecast data."""
     entity_data = {
         "cause": {
             "mapping": entity_map['causes'],
@@ -139,6 +140,7 @@ def load_forecast(entity_key: EntityKey, location: str):
 
 
 def get_cause_data(cause, measure, location_id):
+    """Load forecast cause data."""
     data = get_entity_measure(cause, measure, location_id)
     data = standardize_data(data, 0)
     value_column = 'value'
@@ -147,6 +149,7 @@ def get_cause_data(cause, measure, location_id):
 
 
 def get_etiology_data(etiology, measure, location_id):
+    """Load forecast etiology data."""
     data = get_entity_measure(etiology, measure, location_id)
     data = standardize_data(data, 0)
     value_column = 'value'
@@ -156,6 +159,7 @@ def get_etiology_data(etiology, measure, location_id):
 
 
 def get_population_data(_, measure, location_id):
+    """Load forecast population data."""
     if measure == 'structure':
         data = get_population(location_id)
         value_column = 'population'
@@ -166,6 +170,7 @@ def get_population_data(_, measure, location_id):
 
 
 def get_covariate_data(covariate, measure, location_id):
+    """Load forecast covariate data."""
     if measure != 'estimate':
         raise ValueError(f"The only measure that can be retrieved for covariates is estimate. You requested {measure}.")
     value_column = 'mean_value'
@@ -200,7 +205,8 @@ def _get_live_births_by_sex(location_id):
     return data
 
 
-def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=['Male', 'Female']) -> pd.DataFrame:
+def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=('Male', 'Female')) -> pd.DataFrame:
+    """Standardize index column names and do some filtering."""
     assert not data.empty
 
     data = normalize_for_simulation(rename_value_columns(data, value_column))
@@ -229,6 +235,7 @@ def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=['Male
 
 
 def rename_value_columns(data: pd.DataFrame, value_column: str = 'value') -> pd.DataFrame:
+    """Standardize the value column name."""
     if not ('value' in data or 'mean_value' in data):
         # we need to rename the value column to match vivarium_inputs convention
         col = set(data.columns) - {'year_id', 'sex_id', 'age_group_id', 'draw', 'scenario', 'location_id'}
@@ -239,6 +246,7 @@ def rename_value_columns(data: pd.DataFrame, value_column: str = 'value') -> pd.
 
 
 def standardize_data(data: pd.DataFrame, fill_value: int) -> pd.DataFrame:
+    """Standardize data shape and clean up nulls."""
     # because forecasting data is already in long format, we need a custom standardize method
 
     # age_groups that we expect to exist for each entity
@@ -301,11 +309,13 @@ def replicate_data(data):
 
 
 def validate_data(entity_key, data):
+    """Check data quality."""
     validate_demographic_block(entity_key, data)
     validate_value_range(entity_key, data)
 
 
 def validate_demographic_block(entity_key, data):
+    """Check index quality."""
     ages = get_age_bins()
     age_start = ages['age_group_years_start']
     year_start = range(2017, MAX_YEAR + 1)
@@ -344,6 +354,7 @@ def validate_demographic_block(entity_key, data):
 
 
 def validate_value_range(entity_key, data):
+    """Validates that values of particular types are in a reasonable range."""
     maxes = {
         'proportion': 1,
         'population': 100_000_000,
@@ -361,7 +372,7 @@ def validate_value_range(entity_key, data):
             max_value = maxes['incidence']
         else:
             raise NotImplementedError(f'No max value on record for {entity_key}.')
-        # FIXME: for shigella model, all we care about is 2025-2040 so restricting to that range
+        # for shigella model, all we care about is 2025-2040 so restricting to that range
         data = data[data.year_start >= 2025]
         # all supported entity/measures as of 3/22/19 should be > 0
         if np.any(data.value < 0):

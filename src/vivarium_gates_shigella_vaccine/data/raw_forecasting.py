@@ -11,7 +11,10 @@ if config.input_data.cache_data:
     memory = Memory(cachedir=get_cache_directory(config))
 else:
     class Memory:
+        """Memory mock."""
+
         def cache(self, f):
+            """Cache mock."""
             return f
 
     memory = Memory()
@@ -57,6 +60,7 @@ FORECASTING_CAUSE_SET_ID = 6
 
 @memory.cache
 def get_entity_measure(entity, measure: str, location_id: int) -> pd.DataFrame:
+    """Loads measure data for an entity."""
 
     if entity['kind'] not in FORECASTING_VERSIONS:
         raise NotImplementedError(f"You requested forecasting data for a {entity['kind']} but we don't currently have "
@@ -72,8 +76,8 @@ def get_entity_measure(entity, measure: str, location_id: int) -> pd.DataFrame:
     return _load_data(path, location_id)
 
 
-@memory.cache
 def get_population(location_id: int) -> pd.DataFrame:
+    """Loads forecasted population data."""
     path = f"{FORECASTING_DATA_PATH}/structure/population/{FORECASTING_VERSIONS['population']['structure']}"
     return _load_data(path, location_id)
 
@@ -108,8 +112,9 @@ def _get_cause_path(measure: str, cause: dict) -> str:
 def _get_etiology_path(measure: str, etiology: dict) -> str:
     etiology_versions = FORECASTING_VERSIONS['etiology']
     if measure not in etiology_versions:
-        raise NotImplementedError(f"You requested forecasting data for {measure} for an etiology but we don't currently "
-                                  f"have recorded versions for that measure.")
+        raise NotImplementedError(f"You requested forecasting data for {measure} for an etiology but we don't "
+                                  f"currently have recorded versions for that measure.")
+
     return f"{FORECASTING_DATA_PATH}/{measure}/etiology/{etiology['name']}/{etiology_versions[measure][etiology['name']]}"
 
 
@@ -121,12 +126,14 @@ def query(q: str, conn_def: str):
 
 
 def get_location_ids() -> pd.DataFrame:
+    """Load the set of location ids for the GBD round."""
     from db_queries import get_location_metadata
     # FIXME: Magic location_set_id
     return get_location_metadata(location_set_id=2, gbd_round_id=GBD_ROUND_ID)[["location_id", "location_name"]]
 
 
 def get_location_id(location_name):
+    """Map location names to ids."""
     return {r.location_name: r.location_id for _, r in get_location_ids().iterrows()}[location_name]
 
 
