@@ -1,25 +1,28 @@
-import pandas as pd
-import numpy as np
 import math
+from pathlib import Path
 
+from loguru import logger
+import numpy as np
+import pandas as pd
 from vivarium.framework.artifact import EntityKey
 
-
-from vivarium_inputs.core import get_location_id
-from vivarium_inputs.utilities import (normalize_for_simulation, get_age_group_bins_from_age_group_id,
-                                       gbd, forecasting, DataMissingError)
-from gbd_mapping import causes, covariates, etiologies
-
-import logging
-
-_log = logging.getLogger(__name__)
+from .raw_forecasting import (get_location_id, get_location_ids, get_entity_measure, get_population,
+                              get_age_bins, get_age_group_id)
+from .utilities import normalize_for_simulation, get_age_group_bins_from_age_group_id
 
 NUM_DRAWS = 1000
 FERTILE_AGE_GROUP_IDS = list(range(7, 15 + 1))  # need for calc live births by sex
 BASE_COLUMNS = ['year_start', 'year_end', 'age_group_start', 'age_group_end', 'draw', 'sex']
 MAX_YEAR = 2040
 
+
+class DataMissingError(Exception):
+    """Exception raised when data has unhandled missing entries."""
+    pass
+
+
 def get_location_id_subset():
+    """Uses this repo's locations file to get appropriate location ids."""
     locations = open("locations.txt").read().strip().split("\n")
     ids = get_location_ids()
     ids = ids.loc[ids.location_name.isin(locations)]
@@ -29,11 +32,13 @@ def get_location_id_subset():
 
 
 def get_formatted_lex():
+    """Loads formatted country specific life expectancy table."""
     logger.info("Reading and formatting forecasted life expectancy data")
-    df = pd.read_csv(ARTIFACT_DIR / "forecasted_life_expectancy" / "life_expectancy_with_forecasted_data_12.23.19.csv",
-                     index_col=False)
-    df = df.drop(['Unnamed: 0'], axis=1)  # Old index, why can't I avoid reading it in?
 
+    path = Path(__file__).resolve().parent / "life_expectancy_with_forecasted_data_12.23.19.csv"
+    df = pd.read_csv(path, index_col=False)
+
+    df = df.drop(['Unnamed: 0'], axis=1)  # Old index, why can't I avoid reading it in?
     # fix lex
     df = df.rename(columns={'ex_inc': 'life_expectancy'})
 
@@ -59,15 +64,59 @@ def get_formatted_lex():
 
     return df
 
+
+entity_map = {
+    'causes': {
+        'all_causes': {
+            'kind': 'cause',
+            'name': 'all_causes',
+        },
+        'diarrheal_diseases': {
+            'kind': 'cause',
+            'name': 'diarrheal_diseases',
+        },
+    },
+    'etiologies': {
+        'shigellosis': {
+            'kind': 'etiology',
+            'name': 'shigellosis'
+        }
+    },
+    'covariates': {
+        'age_specific_fertility_rate': {
+            'kind': 'covariate',
+            'name': 'age_specific_fertility_rate'
+        },
+        'live_births_by_sex': {
+            'kind': 'covariate',
+            'name': 'live_births_by_sex',
+        },
+        'dtp3_coverage_proportion': {
+            'kind': 'covariate',
+            'name': 'dtp3_coverage_proportion'
+        },
+        'measles_vaccine_coverage_proportion': {
+            'kind': 'covariate',
+            'name': 'measles_vaccine_coverage_proportion'
+        },
+        'measles_vaccine_coverage_2_doses_proportion': {
+            'kind': 'covariate',
+            'name': 'measles_vaccine_coverage_2_doses_proportion'
+        }
+    }
+}
+
+
 def load_forecast(entity_key: EntityKey, location: str):
+    """Load forecast data."""
     entity_data = {
         "cause": {
-            "mapping": causes,
+            "mapping": entity_map['causes'],
             "getter": get_cause_data,
             "measures": ["cause_specific_mortality"]
         },
         "etiology": {
-            "mapping": etiologies,
+            "mapping": entity_map['etiologies'],
             "getter": get_etiology_data,
             "measures": ["incidence", "mortality"],
         },
@@ -77,7 +126,7 @@ def load_forecast(entity_key: EntityKey, location: str):
             "measures": ["structure"],
         },
         "covariate": {
-            "mapping": covariates,
+            "mapping": entity_map['covariates'],
             "getter": get_covariate_data,
             "measures": ["estimate"]
         },
@@ -91,7 +140,8 @@ def load_forecast(entity_key: EntityKey, location: str):
 
 
 def get_cause_data(cause, measure, location_id):
-    data = forecasting.get_entity_measure(cause, measure, location_id)
+    """Load forecast cause data."""
+    data = get_entity_measure(cause, measure, location_id)
     data = standardize_data(data, 0)
     value_column = 'value'
     data = normalize_forecasting(data, value_column)
@@ -99,7 +149,8 @@ def get_cause_data(cause, measure, location_id):
 
 
 def get_etiology_data(etiology, measure, location_id):
-    data = forecasting.get_entity_measure(etiology, measure, location_id)
+    """Load forecast etiology data."""
+    data = get_entity_measure(etiology, measure, location_id)
     data = standardize_data(data, 0)
     value_column = 'value'
     data = normalize_forecasting(data, value_column)
@@ -108,8 +159,9 @@ def get_etiology_data(etiology, measure, location_id):
 
 
 def get_population_data(_, measure, location_id):
+    """Load forecast population data."""
     if measure == 'structure':
-        data = forecasting.get_population(location_id)
+        data = get_population(location_id)
         value_column = 'population'
         data = normalize_forecasting(data, value_column, sexes=['Male', 'Female', 'Both'])
         return data[BASE_COLUMNS + [value_column]]
@@ -118,16 +170,18 @@ def get_population_data(_, measure, location_id):
 
 
 def get_covariate_data(covariate, measure, location_id):
+    """Load forecast covariate data."""
     if measure != 'estimate':
         raise ValueError(f"The only measure that can be retrieved for covariates is estimate. You requested {measure}.")
     value_column = 'mean_value'
-    if covariate.name == 'live_births_by_sex':  # we have to calculate
+    if covariate['name'] == 'live_births_by_sex':  # we have to calculate
         data = _get_live_births_by_sex(location_id)
     else:
-        data = forecasting.get_entity_measure(covariate, measure, location_id)
+        data = get_entity_measure(covariate, measure, location_id)
         data = standardize_data(data, 0)
         data = normalize_forecasting(data, value_column)
-    if 'proportion' in covariate.name:
+    if 'proportion' in covariate['name']:
+        logger.warning(f'Some values below zero found in {covariate["name"]} data.')
         data.value.loc[data.value < 0] = 0
     return data
 
@@ -135,12 +189,12 @@ def get_covariate_data(covariate, measure, location_id):
 def _get_live_births_by_sex(location_id):
     """Forecasting didn't save live_births_by_sex so have to calc from population
     and age specific fertility rate"""
-    pop = forecasting.get_population(location_id)
-    asfr = forecasting.get_entity_measure(covariates.age_specific_fertility_rate, 'estimate', location_id)
+    pop = get_population(location_id)
+    asfr = get_entity_measure(entity_map['covariates']['age_specific_fertility_rate'], 'estimate', location_id)
 
     # calculation of live births by sex from pop & asfr from Martin Pletcher
 
-    fertile_pop = pop[((pop.age_group_id.isin(FERTILE_AGE_GROUP_IDS)) & (pop.sex_id == gbd.FEMALE))]
+    fertile_pop = pop[((pop.age_group_id.isin(FERTILE_AGE_GROUP_IDS)) & (pop.sex_id == 2))]
     data = asfr.merge(fertile_pop, on=['age_group_id', 'draw', 'year_id', 'sex_id', 'location_id', 'scenario'])
     data['live_births'] = data['asfr'] * data['population_agg']
     data = data.groupby(['draw', 'year_id', 'location_id'])[['live_births']].sum().reset_index()
@@ -151,7 +205,8 @@ def _get_live_births_by_sex(location_id):
     return data
 
 
-def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=['Male', 'Female']) -> pd.DataFrame:
+def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=('Male', 'Female')) -> pd.DataFrame:
+    """Standardize index column names and do some filtering."""
     assert not data.empty
 
     data = normalize_for_simulation(rename_value_columns(data, value_column))
@@ -161,7 +216,7 @@ def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=['Male
             data = data.drop("age_group_id", "columns")
         else:
             # drop any age group ids that don't map to bins we use from gbd (e.g., 1 which is <5 or 158 which is <20)
-            data = data[data.age_group_id.isin(gbd.get_age_bins().age_group_id)]
+            data = data[data.age_group_id.isin(get_age_bins().age_group_id)]
             data = get_age_group_bins_from_age_group_id(data)
 
     # not filtering on year as in vivarium_inputs.data_artifact.utilities.normalize b/c will drop future data
@@ -179,7 +234,8 @@ def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=['Male
     return replicate_data(data)
 
 
-def rename_value_columns(data: pd.DataFrame, value_column: str='value') -> pd.DataFrame:
+def rename_value_columns(data: pd.DataFrame, value_column: str = 'value') -> pd.DataFrame:
+    """Standardize the value column name."""
     if not ('value' in data or 'mean_value' in data):
         # we need to rename the value column to match vivarium_inputs convention
         col = set(data.columns) - {'year_id', 'sex_id', 'age_group_id', 'draw', 'scenario', 'location_id'}
@@ -190,10 +246,11 @@ def rename_value_columns(data: pd.DataFrame, value_column: str='value') -> pd.Da
 
 
 def standardize_data(data: pd.DataFrame, fill_value: int) -> pd.DataFrame:
+    """Standardize data shape and clean up nulls."""
     # because forecasting data is already in long format, we need a custom standardize method
 
     # age_groups that we expect to exist for each entity
-    whole_age_groups = gbd.get_age_group_id() if set(data.age_group_id) != {22} else [22]
+    whole_age_groups = get_age_group_id() if set(data.age_group_id) != {22} else [22]
     sex_id = data.sex_id.unique()
     year_id = data.year_id.unique()
     location_id = data.location_id.unique()
@@ -252,12 +309,14 @@ def replicate_data(data):
 
 
 def validate_data(entity_key, data):
+    """Check data quality."""
     validate_demographic_block(entity_key, data)
     validate_value_range(entity_key, data)
 
 
 def validate_demographic_block(entity_key, data):
-    ages = gbd.get_age_bins()
+    """Check index quality."""
+    ages = get_age_bins()
     age_start = ages['age_group_years_start']
     year_start = range(2017, MAX_YEAR + 1)
     if 'live_births_by_sex' in entity_key:
@@ -295,6 +354,7 @@ def validate_demographic_block(entity_key, data):
 
 
 def validate_value_range(entity_key, data):
+    """Validates that values of particular types are in a reasonable range."""
     maxes = {
         'proportion': 1,
         'population': 100_000_000,
@@ -312,14 +372,14 @@ def validate_value_range(entity_key, data):
             max_value = maxes['incidence']
         else:
             raise NotImplementedError(f'No max value on record for {entity_key}.')
-        # FIXME: for shigella model, all we care about is 2025-2040 so restricting to that range
+        # for shigella model, all we care about is 2025-2040 so restricting to that range
         data = data[data.year_start >= 2025]
         # all supported entity/measures as of 3/22/19 should be > 0
         if np.any(data.value < 0):
             raise DataMissingError(f'Data for {entity_key} does not contain all values above 0.')
 
         if np.any(data.value > max_value):
-            _log.debug(f'Data for {entity_key} contains values above maximum {max_value}.')
+            logger.debug(f'Data for {entity_key} contains values above maximum {max_value}.')
 
         if np.any(data.value.isna()) or np.any(np.isinf(data.value.values)):
             raise DataMissingError(f'Data for {entity_key} contains NaN or Inf values.')
