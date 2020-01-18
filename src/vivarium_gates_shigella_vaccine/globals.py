@@ -24,3 +24,4 @@ LOCATIONS = [
     "Ghana",
     "Uganda"
 ]
+
