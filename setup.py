@@ -19,6 +19,7 @@ if __name__ == "__main__":
     install_requirements = [
         'vivarium==0.9.3',
         'vivarium_public_health==0.10.4',
+        'gbd_mapping==2.1.0',
 
         # These are pinned for internal dependencies on IHME libraries
         'numpy<=1.15.4',
@@ -27,7 +28,11 @@ if __name__ == "__main__":
         'jinja2',
         'loguru',
         'click',
-      ]
+      ],
+
+    data_requirements = [
+        'vivarium_inputs==3.1.1'
+    ]
 
     extras_require = [
         # For data access
@@ -57,6 +62,7 @@ if __name__ == "__main__":
 
         install_requires=install_requirements,
         extras_require={
+            'data': data_requirements,
             'dev': extras_require,
         },
 
