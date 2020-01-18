@@ -37,7 +37,6 @@ if __name__ == "__main__":
     extras_require = [
         # For data access
         'db_queries',
-        'joblib',
         'xarray',
 
         # For runs on the IHME cluster
