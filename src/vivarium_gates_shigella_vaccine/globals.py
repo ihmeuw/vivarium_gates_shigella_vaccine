@@ -1,5 +1,4 @@
 
-
 PROJECT_NAME = 'vivarium_gates_shigella_vaccine'
 
 LOCATIONS = [
