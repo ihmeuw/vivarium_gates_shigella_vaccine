@@ -3,42 +3,14 @@ import warnings
 import pandas as pd
 import xarray as xr
 
-from .utilities import get_input_config, get_cache_directory
 
 # for now, use reference scenario: 0
 FORECASTING_SCENARIO = 0
 GBD_ROUND_ID = 4
 
 # we have to get these from forecasting
-FORECASTING_VERSIONS = {
-    'covariate': {
-        'estimate': {
-            'age_specific_fertility_rate': 'asfr.nc',
-            'dtp3_coverage_proportion': 'dtp3_coverage.nc',
-            'measles_vaccine_coverage_proportion': 'mcv1_coverage.nc',
-            'measles_vaccine_coverage_2_doses_proportion': 'mcv2_coverage.nc'
-        }
-    },
-    'population': {
-        'structure': 'population.nc'
-    },
-    'cause': {
-        'cause_specific_mortality': {
-            'all_causes': 'all_causes.nc',
-            'diarrheal_diseases': 'diarrheal_diseases.nc'
-        }
-    },
-    'etiology': {
-        'incidence': {
-            'shigellosis': 'shigellosis.nc'
-        },
-        'cause_specific_mortality': {
-            'shigellosis': 'eti_diarrhea_shigellosis.nc'
-        }
-    }
-}
 
-FORECASTING_DATA_PATH = '/share/costeffectiveness/auxiliary_data/GBD_2016/00_external_data_backups'
+
 
 FORECASTING_CAUSE_SET_ID = 6
 
