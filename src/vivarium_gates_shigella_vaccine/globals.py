@@ -1,5 +1,6 @@
 
 PROJECT_NAME = 'vivarium_gates_shigella_vaccine'
+CLUSTER_PROJECT = 'proj_cost_effect_diarrhea'
 
 LOCATIONS = [
     "India",
