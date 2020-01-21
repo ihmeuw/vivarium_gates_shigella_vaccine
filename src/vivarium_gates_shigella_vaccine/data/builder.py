@@ -1,4 +1,10 @@
-"""Modularized functions for building project data artifacts."""
+"""Modularized functions for building project data artifacts.
+
+.. admonition::
+
+   Logging in this module should be done at the ``debug`` level.
+
+"""
 from pathlib import Path
 
 from loguru import logger
@@ -23,9 +29,9 @@ def open_artifact(output_path: Path, location: str) -> Artifact:
 
     """
     if not output_path.exists():
-        logger.info(f"Creating artifact at {str(output_path)}.")
+        logger.debug(f"Creating artifact at {str(output_path)}.")
     else:
-        logger.info(f"Opening artifact at {str(output_path)} for appending.")
+        logger.debug(f"Opening artifact at {str(output_path)} for appending.")
 
     artifact = Artifact(output_path, filter_terms=[get_location_term(location)])
 
@@ -59,9 +65,11 @@ def load_and_write(artifact: Artifact, key: EntityKey, location: str):
 
     """
     if key in artifact:
-        logger.info(f'Data for {key} already in artifact.  Skipping...')
+        logger.debug(f'Data for {key} already in artifact.  Skipping...')
     else:
+        logger.debug(f'Loading data for {key} for location {location}.')
         data = loader.get_data(key, location)
+        logger.debug(f'Writing data for {key} to artifact.')
         artifact.write(key, data)
 
 
@@ -75,6 +83,7 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
         # EntityKey('cause.all_causes.cause_specific_mortality_rate'),
     ]
 
+    logger.debug('Loading and writing demographic data.')
     for key in keys:
         load_and_write(artifact, key, location)
 
