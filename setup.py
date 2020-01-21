@@ -32,6 +32,8 @@ if __name__ == "__main__":
         'db_queries',
         'get_draws',
         'xarray',
+        'netcdf4',
+        'vivarium_inputs[data]==3.1.1',
 
         # For runs on the IHME cluster
         'vivarium_cluster_tools==1.1.2',
@@ -62,6 +64,7 @@ if __name__ == "__main__":
 
         entry_points='''
             [console_scripts]
-            make_specs=vivarium_gates_shigella_vaccine.cli:make_specs
+            make_specs=vivarium_gates_shigella_vaccine.tools.cli:make_specs
+            make_artifacts=vivarium_gates_shigella_vaccine.tools.cli:make_artifacts
         '''
     )

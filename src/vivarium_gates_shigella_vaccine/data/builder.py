@@ -1,4 +1,10 @@
-"""Modularized functions for building project data artifacts."""
+"""Modularized functions for building project data artifacts.
+
+.. admonition::
+
+   Logging in this module should be done at the ``debug`` level.
+
+"""
 from pathlib import Path
 
 from loguru import logger
@@ -23,9 +29,9 @@ def open_artifact(output_path: Path, location: str) -> Artifact:
 
     """
     if not output_path.exists():
-        logger.info(f"Creating artifact at {str(output_path)}.")
+        logger.debug(f"Creating artifact at {str(output_path)}.")
     else:
-        logger.info(f"Opening artifact at {str(output_path)} for appending.")
+        logger.debug(f"Opening artifact at {str(output_path)} for appending.")
 
     artifact = Artifact(output_path, filter_terms=[get_location_term(location)])
 
@@ -59,41 +65,38 @@ def load_and_write(artifact: Artifact, key: EntityKey, location: str):
 
     """
     if key in artifact:
-        logger.info(f'Data for {key} already in artifact.  Skipping...')
+        logger.debug(f'Data for {key} already in artifact.  Skipping...')
     else:
+        logger.debug(f'Loading data for {key} for location {location}.')
         data = loader.get_data(key, location)
+        logger.debug(f'Writing data for {key} to artifact.')
         artifact.write(key, data)
 
 
 def load_and_write_demographic_data(artifact: Artifact, location: str):
     keys = [
         EntityKey('population.structure'),
-        # EntityKey('population.age_bins'),
-        # EntityKey('population.demographic_dimensions'),
-        # EntityKey('population.theoretical_minimum_risk_life_expectancy'),
-        # EntityKey('population.country_specific_life_expectancy'),
-        # EntityKey('cause.all_causes.cause_specific_mortality_rate'),
+        EntityKey('population.age_bins'),
+        EntityKey('population.demographic_dimensions'),
+        EntityKey('population.theoretical_minimum_risk_life_expectancy'),
+        EntityKey('population.location_specific_life_expectancy'),
+        EntityKey('cause.all_causes.cause_specific_mortality_rate'),
+        EntityKey('covariate.live_births_by_year.estimate'),
     ]
 
+    logger.debug('Loading and writing demographic data.')
     for key in keys:
         load_and_write(artifact, key, location)
 
 
-def load_and_write_fertility_data(artifact: Artifact, location: str):
-    keys = [
-        # EntityKey('covariate.live_births_by_sex.estimate')
-    ]
-    pass
-
-
 def load_and_write_cause_data(artifact: Artifact, location: str):
     keys = [
-        # EntityKey('cause.shigellosis.cause_specific_mortality_rate')
-        # EntityKey('cause.shigellosis.prevalence')
-        # EntityKey('cause.shigellosis.incidence_rate')
-        # EntityKey('cause.shigellosis.remission_rate')
-        # EntityKey('cause.shigellosis.disability_weight')
-        # EntityKey('cause.shigellosis.excess_mortality_rate')
+        EntityKey('cause.shigellosis.cause_specific_mortality_rate'),
+        # EntityKey('cause.shigellosis.prevalence'),
+        EntityKey('cause.shigellosis.incidence_rate'),
+        # EntityKey('cause.shigellosis.remission_rate'),
+        # EntityKey('cause.shigellosis.disability_weight'),
+        # EntityKey('cause.shigellosis.excess_mortality_rate'),
     ]
     pass
 

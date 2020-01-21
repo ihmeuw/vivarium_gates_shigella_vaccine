@@ -15,7 +15,7 @@ import pandas as pd
 from vivarium_gates_shigella_vaccine import globals as project_globals
 
 
-def load_forecast_from_xarray(path: Path, location_id: int) -> pd.Dataframe:
+def load_forecast_from_xarray(path: Path, location_id: int) -> pd.DataFrame:
     """Loads forecast data stored in xarray datasets.
 
     Parameters
@@ -37,6 +37,18 @@ def load_forecast_from_xarray(path: Path, location_id: int) -> pd.Dataframe:
             .sel(location_id=location_id, scenario=project_globals.FORECASTING_SCENARIO)
             .to_dataframe()
             .reset_index())
+
+
+def get_location_specific_life_expectancy(location_id: int):
+    """Loads formatted country specific life expectancy table."""
+
+    path = Path(__file__).resolve().parent / "life_expectancy_with_forecasted_data_12.23.19.csv"
+    df = pd.read_csv(path, index_col=False)
+    df = df.drop(['Unnamed: 0'], axis=1)  # Old index, why can't I avoid reading it in?
+    df = df.rename(columns={'ex_inc': 'value'})
+    for id_type in ['location_id', 'sex_id', 'year_id']:
+        df.loc[:, id_type] = df.loc[:, id_type].astype(int)
+    return df.loc[df.location_id == location_id, :]
 
 
 def query(q: str, conn_def: str):
