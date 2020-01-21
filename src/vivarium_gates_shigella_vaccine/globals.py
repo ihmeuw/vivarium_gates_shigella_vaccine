@@ -2,6 +2,9 @@
 PROJECT_NAME = 'vivarium_gates_shigella_vaccine'
 CLUSTER_PROJECT = 'proj_cost_effect_diarrhea'
 
+FORECASTING_SCENARIO = 0  # Reference scenario
+GBD_ROUND_ID = 4  # GBD 2016
+
 LOCATIONS = [
     "India",
     "Indonesia",
@@ -24,4 +27,3 @@ LOCATIONS = [
     "Ghana",
     "Uganda"
 ]
-
