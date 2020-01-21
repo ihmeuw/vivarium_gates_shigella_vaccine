@@ -32,6 +32,7 @@ if __name__ == "__main__":
         'db_queries',
         'get_draws',
         'xarray',
+        'netcdf4',
 
         # For runs on the IHME cluster
         'vivarium_cluster_tools==1.1.2',
