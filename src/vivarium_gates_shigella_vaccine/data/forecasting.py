@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from vivarium.framework.artifact import EntityKey
 
+from vivarium_gates_shigella_vaccine import globals as project_globals
+
 from .raw_forecasting import (get_location_id, get_location_ids, get_entity_measure, get_population,
                               get_age_bins, get_age_group_id)
 from .utilities import normalize_for_simulation, get_age_group_bins_from_age_group_id
@@ -19,6 +21,15 @@ MAX_YEAR = 2040
 class DataMissingError(Exception):
     """Exception raised when data has unhandled missing entries."""
     pass
+
+
+def get_location_id_subset():
+    """Uses this repo's locations file to get appropriate location ids."""
+    ids = get_location_ids()
+    ids = ids.loc[ids.location_name.isin(project_globals.LOCATIONS)]
+    ids = ids.set_index('location_id')
+
+    return ids
 
 
 def get_formatted_lex():
