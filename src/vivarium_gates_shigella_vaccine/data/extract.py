@@ -15,7 +15,7 @@ import pandas as pd
 from vivarium_gates_shigella_vaccine import globals as project_globals
 
 
-def load_forecast_from_xarray(path: Path, location_id: int) -> pd.Dataframe:
+def load_forecast_from_xarray(path: Path, location_id: int) -> pd.DataFrame:
     """Loads forecast data stored in xarray datasets.
 
     Parameters
