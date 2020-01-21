@@ -19,6 +19,7 @@ def get_data(key: EntityKey, location: str):
         EntityKey('population.theoretical_minimum_risk_life_expectancy'): load_theoretical_minimum_risk_life_expectancy,
         EntityKey('population.location_specific_life_expectancy'): load_location_specific_life_expectancy,
         EntityKey('cause.all_causes.cause_specific_mortality_rate'): load_all_cause_mortality_rate,
+        EntityKey('covariate.live_births_by_sex.estimate'): load_live_births_by_sex,
     }
 
     return mapping[key](key, location)
@@ -98,3 +99,17 @@ def load_all_cause_mortality_rate(key: EntityKey, location: str):
     data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
     data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
     return utilities.sort_hierarchical_data(data)
+
+
+def load_live_births_by_sex(key: EntityKey, location: str):
+    location_id = extract.get_location_id(location)
+    asfr_key = EntityKey('covariate.age_specific_fertility_rate.estimate')
+    pop_key = EntityKey('population.structure')
+
+    asfr_data = extract.load_forecast_from_xarray(paths.forecast_data_path(asfr_key), location_id)
+    asfr_data = asfr_data[asfr_data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
+    pop_data = extract.load_forecast_from_xarray(paths.forecast_data_path(pop_key), location_id)
+    import pdb; pdb.set_trace()
+
+
+

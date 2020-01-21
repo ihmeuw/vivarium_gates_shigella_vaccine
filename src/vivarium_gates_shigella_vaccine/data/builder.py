@@ -81,6 +81,7 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
         EntityKey('population.theoretical_minimum_risk_life_expectancy'),
         EntityKey('population.location_specific_life_expectancy'),
         EntityKey('cause.all_causes.cause_specific_mortality_rate'),
+        EntityKey('covariate.live_births_by_sex.estimate'),
     ]
 
     logger.debug('Loading and writing demographic data.')
@@ -90,7 +91,7 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
 
 def load_and_write_fertility_data(artifact: Artifact, location: str):
     keys = [
-        # EntityKey('covariate.live_births_by_sex.estimate')
+        #
     ]
     pass
 
