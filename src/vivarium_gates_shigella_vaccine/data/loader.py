@@ -22,6 +22,8 @@ def get_data(key: EntityKey, location: str):
         EntityKey('covariate.live_births_by_year.estimate'): load_live_births_by_year,
         EntityKey('cause.shigellosis.cause_specific_mortality_rate'): load_shigella_cause_specific_mortality_rate,
         EntityKey('cause.shigellosis.incidence_rate'): load_shigella_incidence_rate,
+        EntityKey('cause.shigellosis.remission_rate'): load_shigella_remission_rate,
+        EntityKey('cause.shigellosis.disability_weight'): load_shigella_disability_weight,
     }
 
     return mapping[key](key, location)
@@ -167,8 +169,9 @@ def load_shigella_incidence_rate(key: EntityKey, location: str):
     return utilities.sort_hierarchical_data(data)
 
 
+def load_shigella_remission_rate(key: EntityKey, location: str):
+    pass
 
 
-
-
-
+def load_shigella_disability_weight(key: EntityKey, location: str):
+    pass

@@ -94,8 +94,8 @@ def load_and_write_cause_data(artifact: Artifact, location: str):
         EntityKey('cause.shigellosis.cause_specific_mortality_rate'),
         # EntityKey('cause.shigellosis.prevalence'),
         EntityKey('cause.shigellosis.incidence_rate'),
-        # EntityKey('cause.shigellosis.remission_rate'),
-        # EntityKey('cause.shigellosis.disability_weight'),
+        EntityKey('cause.shigellosis.remission_rate'),
+        EntityKey('cause.shigellosis.disability_weight'),
         # EntityKey('cause.shigellosis.excess_mortality_rate'),
     ]
     pass
