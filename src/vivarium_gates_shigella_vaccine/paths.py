@@ -23,7 +23,7 @@ def forecast_data_path(entity_key: EntityKey) -> Path:
             'structure': 'population.nc'
         },
         'cause': {
-            'cause_specific_mortality_rate': {
+            'cause_specific_mortality': {
                 'all_causes': 'all_causes.nc',
                 'diarrheal_diseases': 'diarrheal_diseases.nc'
             }

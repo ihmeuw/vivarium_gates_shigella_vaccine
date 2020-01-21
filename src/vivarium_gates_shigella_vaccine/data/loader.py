@@ -83,8 +83,9 @@ def load_location_specific_life_expectancy(key: EntityKey, location: str):
 
 
 def load_all_cause_mortality_rate(key: EntityKey, location: str):
+    lookup_key = EntityKey('cause.all_causes.cause_specific_mortality')
     location_id = extract.get_location_id(location)
-    path = paths.forecast_data_path(key)
+    path = paths.forecast_data_path(lookup_key)
     data = extract.load_forecast_from_xarray(path, location_id)
 
 
