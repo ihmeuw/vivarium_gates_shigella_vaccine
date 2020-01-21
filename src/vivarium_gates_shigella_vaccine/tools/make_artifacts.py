@@ -76,28 +76,24 @@ def build_all_artifacts(output_dir, verbose):
             logger.info(f'Submitted job {jobs[location]} to build artifact for {location}.')
             session.deleteJobTemplate(job_template)
 
-        decodestatus = {drmaa.JobState.UNDETERMINED: 'process status cannot be determined',
-                        drmaa.JobState.QUEUED_ACTIVE: 'job is queued and active',
-                        drmaa.JobState.SYSTEM_ON_HOLD: 'job is queued and in system hold',
-                        drmaa.JobState.USER_ON_HOLD: 'job is queued and in user hold',
-                        drmaa.JobState.USER_SYSTEM_ON_HOLD: 'job is queued and in user and system hold',
-                        drmaa.JobState.RUNNING: 'job is running',
-                        drmaa.JobState.SYSTEM_SUSPENDED: 'job is system suspended',
-                        drmaa.JobState.USER_SUSPENDED: 'job is user suspended',
-                        drmaa.JobState.DONE: 'job finished normally',
-                        drmaa.JobState.FAILED: 'job finished, but failed'}
+        decodestatus = {drmaa.JobState.UNDETERMINED: 'undetermined',
+                        drmaa.JobState.QUEUED_ACTIVE: 'queued_active',
+                        drmaa.JobState.SYSTEM_ON_HOLD: 'system_hold',
+                        drmaa.JobState.USER_ON_HOLD: 'user_hold',
+                        drmaa.JobState.USER_SYSTEM_ON_HOLD: 'user_system_hold',
+                        drmaa.JobState.RUNNING: 'running',
+                        drmaa.JobState.SYSTEM_SUSPENDED: 'system_suspended',
+                        drmaa.JobState.USER_SUSPENDED: 'user_suspended',
+                        drmaa.JobState.DONE: 'finished',
+                        drmaa.JobState.FAILED: 'failed'}
 
         if verbose:
             logger.info('Entering monitoring loop.')
-            jobs_running = any([job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()])
-
-            while jobs_running:
+            while any([job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()]):
                 for location, (job_id, status) in jobs.items():
-                    jobs[location] = (job_id, decodestatus[session.jobStatus(job_id)])
-                    logger.info(f'{location}: {jobs[location]}')
-                jobs_running = any(
-                    [job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()])
-                import pdb; pdb.set_trace()
+                    jobs[location] = (job_id, session.jobStatus(job_id))
+                    logger.info(f'{location:<15}: {decodestatus[jobs[location][1]]:>15}')
+
                 time.sleep(10)
                 logger.info('Checking status again')
                 logger.info('---------------------')
