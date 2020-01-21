@@ -7,6 +7,7 @@
 
 """
 from pathlib import Path
+import time
 import shutil
 
 import click
@@ -93,6 +94,9 @@ def build_all_artifacts(output_dir):
             for location, (job_id, status) in jobs.items():
                 jobs[location] = (job_id, decodestatus[session.jobStatus(job_id)])
                 logger.info(f'{location}: {jobs[location]}')
+            time.sleep(10)
+            logger.info('Checking status again')
+            logger.info('---------------------')
 
     logger.info('Done')
 
