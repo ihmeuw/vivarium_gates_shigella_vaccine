@@ -1,4 +1,6 @@
 """
+
+# TODO: Update this docstring.
 Make model specifications
 
 click application that takes a template model specification file
@@ -22,7 +24,7 @@ from vivarium.framework.utilities import handle_exceptions
 from vivarium_gates_shigella_vaccine import paths
 import vivarium_gates_shigella_vaccine.globals as project_globals
 
-from .logging import configure_logging_to_terminal
+from .app_logging import configure_logging_to_terminal
 from .make_specs import build_model_specifications
 from .make_artifacts import build_artifacts
 
@@ -92,4 +94,4 @@ def make_specs(template: str, location: str, output_dir: str, verbose: int, with
 def make_artifacts(location: str, output_dir: str, append: bool, verbose: int, with_debugger: bool) -> None:
     configure_logging_to_terminal(verbose)
     main = handle_exceptions(build_artifacts, logger, with_debugger=with_debugger)
-    main(location, output_dir, append)
+    main(location, output_dir, append, verbose)
