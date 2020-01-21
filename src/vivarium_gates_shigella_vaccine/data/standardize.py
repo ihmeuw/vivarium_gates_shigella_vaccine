@@ -9,7 +9,6 @@ from .extract import get_age_bins, get_age_group_id
 
 
 FERTILE_AGE_GROUP_IDS = list(range(7, 15 + 1))  # need for calc live births by sex
-BASE_COLUMNS = ['year_start', 'year_end', 'age_group_start', 'age_group_end', 'draw', 'sex']
 
 
 def normalize_for_simulation(df):
