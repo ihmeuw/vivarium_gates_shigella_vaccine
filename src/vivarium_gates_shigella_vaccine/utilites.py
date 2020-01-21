@@ -14,4 +14,5 @@ def sanitize_location(location: str):
         special characters removed.
 
     """
+    # FIXME: Should make this a reversible transformation.
     return location.replace(" ", "_").replace("'", "_").lower()
