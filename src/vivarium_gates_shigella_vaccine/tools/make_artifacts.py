@@ -18,7 +18,7 @@ from vivarium_gates_shigella_vaccine import globals as project_globals
 from vivarium_gates_shigella_vaccine.data import builder
 from vivarium_gates_shigella_vaccine.utilites import sanitize_location
 
-from .app_logging import add_logging_sink
+from vivarium_gates_shigella_vaccine.tools.app_logging import add_logging_sink
 
 
 def build_artifacts(location: str, output_dir: str, append: bool, verbose: int):
@@ -71,8 +71,7 @@ def build_all_artifacts(output_dir, verbose):
             job_template.args = [__file__, str(path), location]
             job_template.nativeSpecification = (f'-V -b y -P {project_globals.CLUSTER_PROJECT} -q all.q '
                                                 f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 '
-                                                f'-N {sanitize_location(location)}_artifact '
-                                                f'-j y -o {str(output_dir / sanitize_location(location))}.o')
+                                                f'-N {sanitize_location(location)}_artifact')
             jobs[location] = (session.runJob(job_template), drmaa.JobState.UNDETERMINED)
             logger.info(f'Submitted job {jobs[location]} to build artifact for {location}.')
             session.deleteJobTemplate(job_template)
