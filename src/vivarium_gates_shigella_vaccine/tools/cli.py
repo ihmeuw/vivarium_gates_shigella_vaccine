@@ -22,7 +22,7 @@ from vivarium.framework.utilities import handle_exceptions
 from vivarium_gates_shigella_vaccine import paths
 import vivarium_gates_shigella_vaccine.globals as project_globals
 
-from .logging import configure_logging_to_terminal
+from .app_logging import configure_logging_to_terminal
 from .make_specs import build_model_specifications
 from .make_artifacts import build_artifacts
 
