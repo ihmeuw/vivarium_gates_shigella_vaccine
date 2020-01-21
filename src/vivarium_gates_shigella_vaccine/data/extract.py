@@ -8,9 +8,11 @@
 
 """
 from pathlib import Path
+from typing import Iterable, Union
 import warnings
 
 import pandas as pd
+from vivarium_inputs import globals as vi_globals
 
 from vivarium_gates_shigella_vaccine import globals as project_globals
 
@@ -58,6 +60,13 @@ def query(q: str, conn_def: str):
     return ezfuncs.query(q, conn_def=conn_def)
 
 
+def get_draws(*args, **kwargs):
+    """Wrapper around central comp's get_draws.api.get_draws"""
+    from get_draws.api import get_draws
+    warnings.filterwarnings("default", module="get_draws")
+    return get_draws(*args, **kwargs)
+
+
 def get_location_ids() -> pd.DataFrame:
     """Load the set of location ids for the GBD round."""
     from db_queries import get_location_metadata
@@ -94,3 +103,47 @@ def get_age_bins() -> pd.DataFrame:
     WHERE age_group_id IN ({','.join([str(a) for a in get_age_group_id()])})
     """
     return query(q, 'shared')
+
+
+def get_publication_ids_for_round(gbd_round_id: int) -> Iterable[int]:
+    """Gets the Lancet publication ids associated with a particular gbd round."""
+    round_year = {3: 2015, 4: 2016}[gbd_round_id]
+
+    q = f"""
+    SELECT publication_id
+    FROM shared.publication
+    WHERE gbd_round = {round_year}
+    AND shared.publication.publication_type_id = 1
+    """
+
+    return query(q, 'epi').publication_id.values
+
+
+def get_dismod_model_version(me_id: int,
+                             publication_ids: Union[Iterable[int], None]) -> Union[int, str, None]:
+    """Grabs the model version ids for dismod draws."""
+    q = f"""
+    SELECT modelable_entity_id, 
+           model_version_id
+    FROM epi.publication_model_version
+    JOIN epi.model_version USING (model_version_id)
+    JOIN shared.publication USING (publication_id)
+    WHERE publication_id in ({','.join([str(pid) for pid in publication_ids])})
+    """
+    mapping = query(q, 'epi')
+    version_dict = dict(mapping[['modelable_entity_id', 'model_version_id']].values)
+    return version_dict.get(me_id, None)
+
+
+def get_modelable_entity_draws(me_id: int, location_id: int) -> pd.DataFrame:
+    """Gets draw level epi parameters for a particular dismod model, location, and gbd round."""
+    publication_ids = get_publication_ids_for_round(project_globals.GBD_ROUND_ID)
+    model_version = get_dismod_model_version(me_id, publication_ids)
+    return get_draws(gbd_id_type='modelable_entity_id',
+                     gbd_id=me_id,
+                     source="epi",
+                     location_id=location_id,
+                     sex_id=[vi_globals.SEXES['Male'], vi_globals.SEXES['Female']],
+                     age_group_id=get_age_group_id(),
+                     version_id=model_version,
+                     gbd_round_id=project_globals.GBD_ROUND_ID)
