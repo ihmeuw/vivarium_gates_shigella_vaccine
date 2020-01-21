@@ -78,9 +78,10 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
         EntityKey('population.structure'),
         EntityKey('population.age_bins'),
         EntityKey('population.demographic_dimensions'),
-        # EntityKey('population.theoretical_minimum_risk_life_expectancy'),
-        # EntityKey('population.country_specific_life_expectancy'),
-        # EntityKey('cause.all_causes.cause_specific_mortality_rate'),
+        EntityKey('population.theoretical_minimum_risk_life_expectancy'),
+        EntityKey('population.location_specific_life_expectancy'),
+        EntityKey('cause.all_causes.cause_specific_mortality_rate'),
+        EntityKey('covariate.live_births_by_year.estimate'),
     ]
 
     logger.debug('Loading and writing demographic data.')
@@ -88,21 +89,14 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
         load_and_write(artifact, key, location)
 
 
-def load_and_write_fertility_data(artifact: Artifact, location: str):
-    keys = [
-        # EntityKey('covariate.live_births_by_sex.estimate')
-    ]
-    pass
-
-
 def load_and_write_cause_data(artifact: Artifact, location: str):
     keys = [
-        # EntityKey('cause.shigellosis.cause_specific_mortality_rate')
-        # EntityKey('cause.shigellosis.prevalence')
-        # EntityKey('cause.shigellosis.incidence_rate')
-        # EntityKey('cause.shigellosis.remission_rate')
-        # EntityKey('cause.shigellosis.disability_weight')
-        # EntityKey('cause.shigellosis.excess_mortality_rate')
+        EntityKey('cause.shigellosis.cause_specific_mortality_rate'),
+        # EntityKey('cause.shigellosis.prevalence'),
+        EntityKey('cause.shigellosis.incidence_rate'),
+        # EntityKey('cause.shigellosis.remission_rate'),
+        # EntityKey('cause.shigellosis.disability_weight'),
+        # EntityKey('cause.shigellosis.excess_mortality_rate'),
     ]
     pass
 

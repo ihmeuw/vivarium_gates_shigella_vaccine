@@ -33,6 +33,7 @@ if __name__ == "__main__":
         'get_draws',
         'xarray',
         'netcdf4',
+        'vivarium_inputs[data]==3.1.1',
 
         # For runs on the IHME cluster
         'vivarium_cluster_tools==1.1.2',
