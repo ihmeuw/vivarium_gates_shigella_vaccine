@@ -19,7 +19,7 @@ from vivarium_gates_shigella_vaccine.data import builder
 from vivarium_gates_shigella_vaccine.utilites import sanitize_location
 
 
-def build_artifacts(location: str, output_dir: str, append: bool):
+def build_artifacts(location: str, output_dir: str, append: bool, verbose: int):
     output_dir = Path(output_dir)
 
     if location in project_globals.LOCATIONS:
@@ -48,14 +48,14 @@ def build_artifacts(location: str, output_dir: str, append: bool):
                 logger.info(f'Deleting artifact at {str(path)}.')
                 path.unlink()
 
-        build_all_artifacts(output_dir)
+        build_all_artifacts(output_dir, verbose)
 
     else:
         raise ValueError(f'Location must be one of {project_globals.LOCATIONS} or the string "all". '
                          f'You specified {location}.')
 
 
-def build_all_artifacts(output_dir):
+def build_all_artifacts(output_dir, verbose):
     from vivarium_cluster_tools.psimulate.utilities import get_drmaa
     drmaa = get_drmaa()
 
@@ -86,14 +86,19 @@ def build_all_artifacts(output_dir):
                         drmaa.JobState.DONE: 'job finished normally',
                         drmaa.JobState.FAILED: 'job finished, but failed'}
 
-        logger.info('Entering monitoring loop.')
-        while any([job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()]):
-            for location, (job_id, status) in jobs.items():
-                jobs[location] = (job_id, decodestatus[session.jobStatus(job_id)])
-                logger.info(f'{location}: {jobs[location]}')
-            time.sleep(10)
-            logger.info('Checking status again')
-            logger.info('---------------------')
+        if verbose:
+            logger.info('Entering monitoring loop.')
+            jobs_running = any([job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()])
+
+            while jobs_running:
+                for location, (job_id, status) in jobs.items():
+                    jobs[location] = (job_id, decodestatus[session.jobStatus(job_id)])
+                    logger.info(f'{location}: {jobs[location]}')
+                    jobs_running = any(
+                        [job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()])
+                time.sleep(10)
+                logger.info('Checking status again')
+                logger.info('---------------------')
 
     logger.info('Done')
 

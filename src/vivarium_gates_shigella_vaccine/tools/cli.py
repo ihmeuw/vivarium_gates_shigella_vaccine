@@ -92,4 +92,4 @@ def make_specs(template: str, location: str, output_dir: str, verbose: int, with
 def make_artifacts(location: str, output_dir: str, append: bool, verbose: int, with_debugger: bool) -> None:
     configure_logging_to_terminal(verbose)
     main = handle_exceptions(build_artifacts, logger, with_debugger=with_debugger)
-    main(location, output_dir, append)
+    main(location, output_dir, append, verbose)
