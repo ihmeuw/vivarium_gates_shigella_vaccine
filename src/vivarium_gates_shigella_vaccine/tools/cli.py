@@ -45,7 +45,10 @@ from .make_specs import build_model_specifications
 @click.option('-v', 'verbose',
               count=True,
               help='Configure logging verbosity.')
-def make_specs(template: str, location: str, output_dir: str, verbose: int) -> None:
+@click.option('--pdb', 'with_debugger',
+              is_flag=True,
+              help='Drop into python debugger if an error occurs.')
+def make_specs(template: str, location: str, output_dir: str, verbose: int, with_debugger: bool) -> None:
     """Generate model specifications based on a template.
 
     The default template lives here:
@@ -61,5 +64,5 @@ def make_specs(template: str, location: str, output_dir: str, verbose: int) -> N
 
     """
     configure_logging_to_terminal(verbose)
-    main = handle_exceptions(build_model_specifications, logger, with_debugger=True)
+    main = handle_exceptions(build_model_specifications, logger, with_debugger=with_debugger)
     main(template, location, output_dir)
