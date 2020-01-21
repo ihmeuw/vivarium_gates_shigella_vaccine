@@ -7,9 +7,6 @@ import pandas as pd
 from vivarium.framework.artifact import EntityKey
 
 from vivarium_gates_shigella_vaccine import globals as project_globals
-
-from .raw_forecasting import (get_location_id, get_location_ids, get_entity_measure, get_population,
-                              get_age_bins, get_age_group_id)
 from .utilities import normalize_for_simulation, get_age_group_bins_from_age_group_id
 
 NUM_DRAWS = 1000
@@ -17,6 +14,12 @@ FERTILE_AGE_GROUP_IDS = list(range(7, 15 + 1))  # need for calc live births by s
 BASE_COLUMNS = ['year_start', 'year_end', 'age_group_start', 'age_group_end', 'draw', 'sex']
 MAX_YEAR = 2040
 
+
+#############################
+# THIS MODULE IS DEPRECATED #
+# It's only here till I     #
+# move the functionality.   #
+#############################
 
 class DataMissingError(Exception):
     """Exception raised when data has unhandled missing entries."""
