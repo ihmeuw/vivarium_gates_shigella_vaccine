@@ -67,10 +67,11 @@ def build_all_artifacts(output_dir):
                 f'from {project_globals.PROJECT_NAME}.tools.make_artifacts import build_single_location_artifact',
                 f'build_single_location_artifact("{str(path)}", "{location}")'
             ]
+            command = '; '.join(command)
 
             job_template = session.createJobTemplate()
-            job_template.remoteCommand = shutil.which('python')
-            job_template.args = ['-c', '; '.join(command)]
+            job_template.remoteCommand = shutil.which("python")
+            job_template.args = ['-c', f'"{command}"']
             job_template.nativeSpecification = (f'-V -b y -P {project_globals.CLUSTER_PROJECT} -q all.q '
                                                 f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 '
                                                 f'-N {sanitize_location(location)}_artifact')
