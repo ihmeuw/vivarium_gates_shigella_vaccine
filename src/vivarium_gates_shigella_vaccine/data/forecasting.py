@@ -134,24 +134,24 @@ def load_forecast(entity_key: EntityKey, location: str):
     }
     mapping, getter, measures = entity_data[entity_key.type].values()
     entity = mapping[entity_key.name]
-    data = getter(entity, entity_key.measure, get_location_id(location)).reset_index(drop=True)
+    data = getter(entity_key, get_location_id(location)).reset_index(drop=True)
     data['location'] = location
     validate_data(entity_key, data)
     return data
 
 
-def get_cause_data(cause, measure, location_id):
+def get_cause_data(cause_key, location_id):
     """Load forecast cause data."""
-    data = get_entity_measure(cause, measure, location_id)
+    data = get_entity_measure(cause_key, location_id)
     data = standardize_data(data, 0)
     value_column = 'value'
     data = normalize_forecasting(data, value_column)
     return data[BASE_COLUMNS + [value_column]]
 
 
-def get_etiology_data(etiology, measure, location_id):
+def get_etiology_data(etiology_key, location_id):
     """Load forecast etiology data."""
-    data = get_entity_measure(etiology, measure, location_id)
+    data = get_entity_measure(etiology_key, location_id)
     data = standardize_data(data, 0)
     value_column = 'value'
     data = normalize_forecasting(data, value_column)
@@ -170,19 +170,19 @@ def get_population_data(_, measure, location_id):
         raise ValueError(f"Only population.structure is supported from forecasting. You requested {measure}.")
 
 
-def get_covariate_data(covariate, measure, location_id):
+def get_covariate_data(covariate_key, location_id):
     """Load forecast covariate data."""
-    if measure != 'estimate':
+    if covariate_key.measure != 'estimate':
         raise ValueError(f"The only measure that can be retrieved for covariates is estimate. You requested {measure}.")
     value_column = 'mean_value'
-    if covariate['name'] == 'live_births_by_sex':  # we have to calculate
+    if covariate_key.name == 'live_births_by_sex':  # we have to calculate
         data = _get_live_births_by_sex(location_id)
     else:
-        data = get_entity_measure(covariate, measure, location_id)
+        data = get_entity_measure(covariate_key, location_id)
         data = standardize_data(data, 0)
         data = normalize_forecasting(data, value_column)
-    if 'proportion' in covariate['name']:
-        logger.warning(f'Some values below zero found in {covariate["name"]} data.')
+    if 'proportion' in covariate_key.name:
+        logger.warning(f'Some values below zero found in {covariate_key} data.')
         data.value.loc[data.value < 0] = 0
     return data
 
@@ -191,7 +191,7 @@ def _get_live_births_by_sex(location_id):
     """Forecasting didn't save live_births_by_sex so have to calc from population
     and age specific fertility rate"""
     pop = get_population(location_id)
-    asfr = get_entity_measure(entity_map['covariates']['age_specific_fertility_rate'], 'estimate', location_id)
+    asfr = get_entity_measure(EntityKey('covariate.age_specific_fertility_rate.estimate'), location_id)
 
     # calculation of live births by sex from pop & asfr from Martin Pletcher
 
