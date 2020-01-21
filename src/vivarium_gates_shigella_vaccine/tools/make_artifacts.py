@@ -68,7 +68,7 @@ def build_all_artifacts(output_dir, verbose):
 
             job_template = session.createJobTemplate()
             job_template.remoteCommand = shutil.which("python")
-            job_template.args = [__file__, str(path), location]
+            job_template.args = [__file__, str(path), f'"{location}"']
             job_template.nativeSpecification = (f'-V -b y -P {project_globals.CLUSTER_PROJECT} -q all.q '
                                                 f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 '
                                                 f'-N {sanitize_location(location)}_artifact')
@@ -106,6 +106,7 @@ def build_all_artifacts(output_dir, verbose):
 
 
 def build_single_location_artifact(path, location, log_to_file=False):
+    location = location.strip('"')
     path = Path(path)
     if log_to_file:
         log_file = path.parent / 'logs' / f'{sanitize_location(location)}.log'
