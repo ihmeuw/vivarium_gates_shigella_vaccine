@@ -1,4 +1,6 @@
 """Loads, standardizes and validates input data for the simulation."""
+from types import SimpleNamespace
+
 import pandas as pd
 
 from vivarium.framework.artifact import EntityKey
@@ -170,7 +172,14 @@ def load_shigella_incidence_rate(key: EntityKey, location: str):
 
 
 def load_shigella_remission_rate(key: EntityKey, location: str):
-    pass
+    location_id = extract.get_location_id(location)
+    data = extract.get_modelable_entity_draws(project_globals.DIARRHEAL_DISEASES.dismod_id, location_id)
+    data = data[data.measure_id == vi_globals.MEASURES['Remission rate']]
+    data = utilities.filter_data_by_restrictions(data, project_globals.DIARRHEAL_DISEASES,
+                                                 'yld', utility_data.get_age_group_ids())
+    data = utilities.normalize(data, fill_value=0)
+    data = data.filter(DEMOGRAPHIC_COLUMNS + DRAW_COLUMNS)
+
 
 
 def load_shigella_disability_weight(key: EntityKey, location: str):
