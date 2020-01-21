@@ -96,7 +96,7 @@ def build_all_artifacts(output_dir, verbose):
                 for location, (job_id, status) in jobs.items():
                     jobs[location] = (job_id, session.jobStatus(job_id))
                     logger.info(f'{location:<35}: {decodestatus[jobs[location][1]]:>15}')
-
+                logger.info('')
                 time.sleep(10)
                 logger.info('Checking status again')
                 logger.info('---------------------')
