@@ -20,6 +20,8 @@ def get_data(key: EntityKey, location: str):
         EntityKey('population.location_specific_life_expectancy'): load_location_specific_life_expectancy,
         EntityKey('cause.all_causes.cause_specific_mortality_rate'): load_all_cause_mortality_rate,
         EntityKey('covariate.live_births_by_year.estimate'): load_live_births_by_year,
+        EntityKey('cause.shigellosis.cause_specific_mortality_rate'): load_shigella_cause_specific_mortality_rate,
+        EntityKey('cause.shigellosis.incidence_rate'): load_shigella_incidence_rate,
     }
 
     return mapping[key](key, location)
@@ -131,6 +133,40 @@ def load_live_births_by_year(key: EntityKey, location: str):
     data = utilities.scrub_gbd_conventions(data, location)
     data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
     return utilities.sort_hierarchical_data(data)
+
+
+def load_shigella_cause_specific_mortality_rate(key: EntityKey, location: str):
+    location_id = extract.get_location_id(location)
+    lookup_key = EntityKey('etiology.shigellosis.cause_specific_mortality')
+    data = extract.load_forecast_from_xarray(paths.forecast_data_path(lookup_key), location_id)
+    data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
+    data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
+    data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
+    data = data.reset_index()
+    data = standardize.normalize(data)
+    data = utilities.reshape(data)
+    data = utilities.scrub_gbd_conventions(data, location)
+    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
+    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
+    return utilities.sort_hierarchical_data(data)
+
+
+def load_shigella_incidence_rate(key: EntityKey, location: str):
+    location_id = extract.get_location_id(location)
+    lookup_key = EntityKey('etiology.shigellosis.incidence')
+    data = extract.load_forecast_from_xarray(paths.forecast_data_path(lookup_key), location_id)
+    data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
+    data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
+    data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
+    data = data.reset_index()
+    data = standardize.normalize(data)
+    data = utilities.reshape(data)
+    data = utilities.scrub_gbd_conventions(data, location)
+    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
+    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
+    return utilities.sort_hierarchical_data(data)
+
+
 
 
 
