@@ -87,7 +87,7 @@ def build_all_artifacts(output_dir):
                         drmaa.JobState.FAILED: 'job finished, but failed'}
 
         logger.info('Entering monitoring loop.')
-        while any([False if job[1] in [drmaa.JobState.DONE, drmaa.JobState.FAILED] else True for job in jobs.values()]):
+        while any([job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()]):
             for location, (job_id, status) in jobs.items():
                 jobs[location] = (job_id, decodestatus[session.jobStatus(job_id)])
                 logger.info(f'{location}: {jobs[location]}')
@@ -99,6 +99,7 @@ def build_all_artifacts(output_dir):
 
 
 def build_single_location_artifact(path, location):
+    path = Path(path)
     logger.info(f'Building artifact for {location} at {str(path)}.')
     artifact = builder.open_artifact(path, location)
     logger.info(f'Loading and writing demographic data.')
