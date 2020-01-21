@@ -59,4 +59,5 @@ def build_all_artifacts(output_dir):
 def build_single_location_artifact(path, location):
     logger.info(f'Building artifact for {location} at {str(path)}.')
     artifact = builder.open_artifact(path, location)
+    logger.info(f'Loading and writing demographic data.')
     builder.load_and_write_demographic_data(artifact, location)
