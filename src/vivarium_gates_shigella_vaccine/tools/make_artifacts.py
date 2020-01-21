@@ -18,6 +18,8 @@ from vivarium_gates_shigella_vaccine import globals as project_globals
 from vivarium_gates_shigella_vaccine.data import builder
 from vivarium_gates_shigella_vaccine.utilites import sanitize_location
 
+from .app_logging import add_logging_sink
+
 
 def build_artifacts(location: str, output_dir: str, append: bool, verbose: int):
     output_dir = Path(output_dir)
@@ -69,8 +71,7 @@ def build_all_artifacts(output_dir, verbose):
             job_template.args = [__file__, str(path), location]
             job_template.nativeSpecification = (f'-V -b y -P {project_globals.CLUSTER_PROJECT} -q all.q '
                                                 f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 '
-                                                f'-N {sanitize_location(location)}_artifact '
-                                                f'-j y -o {str(output_dir / sanitize_location(location))}.o')
+                                                f'-N {sanitize_location(location)}_artifact')
             jobs[location] = (session.runJob(job_template), drmaa.JobState.UNDETERMINED)
             logger.info(f'Submitted job {jobs[location]} to build artifact for {location}.')
             session.deleteJobTemplate(job_template)
@@ -103,8 +104,14 @@ def build_all_artifacts(output_dir, verbose):
     logger.info('Done')
 
 
-def build_single_location_artifact(path, location):
+def build_single_location_artifact(path, location, log_to_file=False):
     path = Path(path)
+    if log_to_file:
+        log_file = path.parent / 'logs' / f'{sanitize_location(location)}.log'
+        if log_file.exists():
+            log_file.unlink()
+        add_logging_sink(log_file, verbose=2)
+
     logger.info(f'Building artifact for {location} at {str(path)}.')
     artifact = builder.open_artifact(path, location)
     logger.info(f'Loading and writing demographic data.')
@@ -114,7 +121,7 @@ def build_single_location_artifact(path, location):
 if __name__ == "__main__":
     artifact_path = sys.argv[1]
     artifact_location = sys.argv[2]
-    build_single_location_artifact(artifact_path, artifact_location)
+    build_single_location_artifact(artifact_path, artifact_location, log_to_file=True)
 
 
 
