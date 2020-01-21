@@ -77,7 +77,7 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
     keys = [
         EntityKey('population.structure'),
         EntityKey('population.age_bins'),
-        # EntityKey('population.demographic_dimensions'),
+        EntityKey('population.demographic_dimensions'),
         # EntityKey('population.theoretical_minimum_risk_life_expectancy'),
         # EntityKey('population.country_specific_life_expectancy'),
         # EntityKey('cause.all_causes.cause_specific_mortality_rate'),

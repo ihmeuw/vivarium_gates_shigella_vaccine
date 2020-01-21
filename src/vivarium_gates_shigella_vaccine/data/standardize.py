@@ -80,7 +80,7 @@ def normalize_forecasting(data: pd.DataFrame, value_column='value', sexes=('Male
     # not filtering on year as in vivarium_inputs.data_artifact.utilities.normalize b/c will drop future data
     # only keeping data out to 2040 for consistency
     if 'year_start' in data:
-        data = data[(data.year_start >= 2017) & (data.year_start <= project_globals.MAX_YEAR)]
+        data = data[(project_globals.MIN_YEAR <= data.year_start) & (data.year_start <= project_globals.MAX_YEAR)]
 
     if 'scenario' in data:
         data = data.drop("scenario", "columns")
