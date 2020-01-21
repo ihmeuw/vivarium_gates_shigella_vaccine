@@ -95,8 +95,9 @@ def build_all_artifacts(output_dir, verbose):
                 for location, (job_id, status) in jobs.items():
                     jobs[location] = (job_id, decodestatus[session.jobStatus(job_id)])
                     logger.info(f'{location}: {jobs[location]}')
-                    jobs_running = any(
-                        [job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()])
+                jobs_running = any(
+                    [job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()])
+                import pdb; pdb.set_trace()
                 time.sleep(10)
                 logger.info('Checking status again')
                 logger.info('---------------------')
