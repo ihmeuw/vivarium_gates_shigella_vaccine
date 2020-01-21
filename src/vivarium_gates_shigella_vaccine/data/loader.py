@@ -18,6 +18,7 @@ def get_data(key: EntityKey, location: str):
         EntityKey('population.demographic_dimensions'): load_demographic_dimensions,
         EntityKey('population.theoretical_minimum_risk_life_expectancy'): load_theoretical_minimum_risk_life_expectancy,
         EntityKey('population.location_specific_life_expectancy'): load_location_specific_life_expectancy,
+        EntityKey('cause.all_causes.cause_specific_mortality_rate'): load_all_cause_mortality_rate,
     }
 
     return mapping[key](key, location)
@@ -79,6 +80,13 @@ def load_location_specific_life_expectancy(key: EntityKey, location: str):
     data = utilities.scrub_gbd_conventions(data, location)
     data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
     return utilities.sort_hierarchical_data(data)
+
+
+def load_all_cause_mortality_rate(key: EntityKey, location: str):
+    location_id = extract.get_location_id(location)
+    path = paths.forecast_data_path(key)
+    data = extract.load_forecast_from_xarray(path, location_id)
+
 
 
 
