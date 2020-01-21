@@ -89,13 +89,6 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
         load_and_write(artifact, key, location)
 
 
-def load_and_write_fertility_data(artifact: Artifact, location: str):
-    keys = [
-        #
-    ]
-    pass
-
-
 def load_and_write_cause_data(artifact: Artifact, location: str):
     keys = [
         # EntityKey('cause.shigellosis.cause_specific_mortality_rate')

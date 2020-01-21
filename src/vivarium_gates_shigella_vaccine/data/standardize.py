@@ -45,7 +45,6 @@ def normalize_year(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-
 def get_age_group_bins_from_age_group_id(df):
     """Creates "age_group_start" and "age_group_end" columns from the "age_group_id" column
     Parameters
