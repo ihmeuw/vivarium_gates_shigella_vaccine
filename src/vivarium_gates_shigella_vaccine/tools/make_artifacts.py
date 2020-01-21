@@ -73,7 +73,7 @@ def build_all_artifacts(output_dir, verbose):
                                                 f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 '
                                                 f'-N {sanitize_location(location)}_artifact')
             jobs[location] = (session.runJob(job_template), drmaa.JobState.UNDETERMINED)
-            logger.info(f'Submitted job {jobs[location]} to build artifact for {location}.')
+            logger.info(f'Submitted job {jobs[location][0]} to build artifact for {location}.')
             session.deleteJobTemplate(job_template)
 
         decodestatus = {drmaa.JobState.UNDETERMINED: 'undetermined',
