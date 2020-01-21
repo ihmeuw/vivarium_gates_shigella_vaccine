@@ -25,7 +25,7 @@ if __name__ == "__main__":
         'jinja2',
         'loguru',
         'click',
-      ],
+      ]
 
     extras_require = [
         # For data access
