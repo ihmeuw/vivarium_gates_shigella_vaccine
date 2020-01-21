@@ -7,8 +7,9 @@
 
 """
 from pathlib import Path
-import time
 import shutil
+import sys
+import time
 
 import click
 from loguru import logger
@@ -65,10 +66,11 @@ def build_all_artifacts(output_dir):
 
             job_template = session.createJobTemplate()
             job_template.remoteCommand = shutil.which("python")
-            job_template.args = [__file__, "build_single_location_artifact", str(path), location]
+            job_template.args = [__file__, str(path), location]
             job_template.nativeSpecification = (f'-V -b y -P {project_globals.CLUSTER_PROJECT} -q all.q '
                                                 f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 '
-                                                f'-N {sanitize_location(location)}_artifact')
+                                                f'-N {sanitize_location(location)}_artifact '
+                                                f'-j y -o {str(output_dir / sanitize_location(location))}.o')
             jobs[location] = (session.runJob(job_template), drmaa.JobState.UNDETERMINED)
             logger.info(f'Submitted job {jobs[location]} to build artifact for {location}.')
             session.deleteJobTemplate(job_template)
@@ -101,3 +103,12 @@ def build_single_location_artifact(path, location):
     artifact = builder.open_artifact(path, location)
     logger.info(f'Loading and writing demographic data.')
     builder.load_and_write_demographic_data(artifact, location)
+
+
+if __name__ == "__main__":
+    artifact_path = sys.argv[1]
+    artifact_location = sys.argv[2]
+    build_single_location_artifact(artifact_path, artifact_location)
+
+
+
