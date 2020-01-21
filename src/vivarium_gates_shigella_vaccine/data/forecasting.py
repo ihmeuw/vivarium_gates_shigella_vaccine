@@ -1,10 +1,5 @@
-from pathlib import Path
-
 from loguru import logger
-import pandas as pd
 from vivarium.framework.artifact import EntityKey
-
-from vivarium_gates_shigella_vaccine import globals as project_globals
 
 
 #############################
@@ -12,50 +7,6 @@ from vivarium_gates_shigella_vaccine import globals as project_globals
 # It's only here till I     #
 # move the functionality.   #
 #############################
-
-
-def get_location_id_subset():
-    """Uses this repo's locations file to get appropriate location ids."""
-    ids = get_location_ids()
-    ids = ids.loc[ids.location_name.isin(project_globals.LOCATIONS)]
-    ids = ids.set_index('location_id')
-
-    return ids
-
-
-def get_formatted_lex():
-    """Loads formatted country specific life expectancy table."""
-    logger.info("Reading and formatting forecasted life expectancy data")
-
-    path = Path(__file__).resolve().parent / "life_expectancy_with_forecasted_data_12.23.19.csv"
-    df = pd.read_csv(path, index_col=False)
-
-    df = df.drop(['Unnamed: 0'], axis=1)  # Old index, why can't I avoid reading it in?
-    # fix lex
-    df = df.rename(columns={'ex_inc': 'life_expectancy'})
-
-    # Fix location
-    loc_ids = get_location_id_subset()
-    df = df.set_index("location_id")
-    df = df.join(loc_ids).reset_index()
-    df = df.drop(['location_id'], axis=1)
-    df = df.rename(columns={'location_name': 'location'})
-
-    # Fix age
-    df = df.rename(columns={'age': 'age_group_start'})
-    df['age_group_start'] = df['age_group_start'].round(decimals=2)
-    df['age_group_end'] = df['age_group_start'] + 0.01
-
-    # fix sex
-    df['sex_id'] = df.sex_id.replace({1: 'Male', 2: 'Female'})
-    df = df.rename(columns={'sex_id': 'sex'})
-
-    # fix year
-    df = df.rename(columns={'year_id': 'year_start'})
-    df['year_end'] = df['year_start'] + 1
-
-    return df
-
 
 entity_map = {
     'causes': {

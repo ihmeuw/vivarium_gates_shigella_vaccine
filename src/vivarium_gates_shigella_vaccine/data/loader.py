@@ -16,6 +16,8 @@ def get_data(key: EntityKey, location: str):
         EntityKey('population.structure'): load_population_structure,
         EntityKey('population.age_bins'): load_age_bins,
         EntityKey('population.demographic_dimensions'): load_demographic_dimensions,
+        EntityKey('population.theoretical_minimum_risk_life_expectancy'): load_theoretical_minimum_risk_life_expectancy,
+        EntityKey('population.location_specific_life_expectancy'): load_location_specific_life_expectancy,
     }
 
     return mapping[key](key, location)
@@ -61,6 +63,22 @@ def load_demographic_dimensions(key: EntityKey, location: str):
     data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
     return utilities.sort_hierarchical_data(data)
 
+
+def load_theoretical_minimum_risk_life_expectancy(key: EntityKey, location: str):
+    return interface.get_theoretical_minimum_risk_life_expectancy()
+
+
+def load_location_specific_life_expectancy(key: EntityKey, location: str):
+    location_id = extract.get_location_id(location)
+    data = extract.get_location_specific_life_expectancy(location_id)
+    data = data.rename(columns={'age': 'age_start'})
+    data['age_end'] = data.age_start.shift(-1).fillna(5.01)
+    data = utilities.normalize_sex(data, None, ['value'])
+    data = utilities.normalize_year(data)
+    utilities.reshape(data, value_cols=['value'])
+    data = utilities.scrub_gbd_conventions(data, location)
+    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
+    return utilities.sort_hierarchical_data(data)
 
 
 
