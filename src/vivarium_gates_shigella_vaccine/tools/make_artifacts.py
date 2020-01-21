@@ -91,7 +91,7 @@ def build_all_artifacts(output_dir):
         logger.info('Entering monitoring loop.')
         while any([False if job[1] in [drmaa.JobState.DONE, drmaa.JobState.FAILED] else True for job in jobs.values()]):
             for location, (job_id, status) in jobs.items():
-                jobs[location] = (job_id, decodestatus[session.job_status(job_id)])
+                jobs[location] = (job_id, decodestatus[session.jobStatus(job_id)])
                 logger.info(f'{location}: {jobs[location]}')
 
     logger.info('Done')
