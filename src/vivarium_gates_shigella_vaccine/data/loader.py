@@ -87,9 +87,14 @@ def load_all_cause_mortality_rate(key: EntityKey, location: str):
     location_id = extract.get_location_id(location)
     path = paths.forecast_data_path(lookup_key)
     data = extract.load_forecast_from_xarray(path, location_id)
-
-
-
-
-
-
+    data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
+    data = data.rename(columns={'_all': 'value'})
+    data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
+    data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
+    data = data.reset_index()
+    data = standardize.normalize(data)
+    data = utilities.reshape(data)
+    data = utilities.scrub_gbd_conventions(data, location)
+    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
+    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
+    return utilities.sort_hierarchical_data(data)
