@@ -63,11 +63,6 @@ def load_forecast(entity_key: EntityKey, location: str):
             "getter": get_etiology_data,
             "measures": ["incidence", "mortality"],
         },
-        "population": {
-            "mapping": {'': None},
-            "getter": get_population_data,
-            "measures": ["structure"],
-        },
         "covariate": {
             "mapping": entity_map['covariates'],
             "getter": get_covariate_data,
@@ -116,25 +111,3 @@ def get_covariate_data(covariate_key, location_id):
         logger.warning(f'Some values below zero found in {covariate_key} data.')
         data.value.loc[data.value < 0] = 0
     return data
-
-
-def _get_live_births_by_sex(location_id):
-    """Forecasting didn't save live_births_by_sex so have to calc from population
-    and age specific fertility rate"""
-    pop = get_population(location_id)
-    asfr = get_entity_measure(EntityKey('covariate.age_specific_fertility_rate.estimate'), location_id)
-
-    # calculation of live births by sex from pop & asfr from Martin Pletcher
-
-    fertile_pop = pop[((pop.age_group_id.isin(FERTILE_AGE_GROUP_IDS)) & (pop.sex_id == 2))]
-    data = asfr.merge(fertile_pop, on=['age_group_id', 'draw', 'year_id', 'sex_id', 'location_id', 'scenario'])
-    data['live_births'] = data['asfr'] * data['population_agg']
-    data = data.groupby(['draw', 'year_id', 'location_id'])[['live_births']].sum().reset_index()
-    # normalize first because it would drop sex_id = 3 and duplicate for male and female but we need both for use in
-    # vph FertilityCrudeBirthRate
-    data = normalize_forecasting(data, 'mean_value', ['Both'])
-    data['sex'] = 'Both'
-    return data
-
-
-
