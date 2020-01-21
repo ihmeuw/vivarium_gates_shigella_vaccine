@@ -25,7 +25,7 @@ LOCATIONS = [
     "Democratic Republic of the Congo",
     "South Sudan",
     "Ethiopia",
-    "Tanzania"
+    "Tanzania",
     "Ghana",
-    "Uganda"
+    "Uganda",
 ]
