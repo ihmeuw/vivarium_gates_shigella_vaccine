@@ -21,16 +21,6 @@ class DataMissingError(Exception):
     pass
 
 
-def get_location_id_subset():
-    """Uses this repo's locations file to get appropriate location ids."""
-    locations = open("locations.txt").read().strip().split("\n")
-    ids = get_location_ids()
-    ids = ids.loc[ids.location_name.isin(locations)]
-    ids = ids.set_index('location_id')
-
-    return ids
-
-
 def get_formatted_lex():
     """Loads formatted country specific life expectancy table."""
     logger.info("Reading and formatting forecasted life expectancy data")
