@@ -89,16 +89,20 @@ def build_all_artifacts(output_dir, verbose):
 
         if verbose:
             logger.info('Entering monitoring loop.')
+            logger.info('-------------------------')
+            logger.info('')
+
             while any([job[1] not in [drmaa.JobState.DONE, drmaa.JobState.FAILED] for job in jobs.values()]):
                 for location, (job_id, status) in jobs.items():
                     jobs[location] = (job_id, session.jobStatus(job_id))
-                    logger.info(f'{location:<15}: {decodestatus[jobs[location][1]]:>15}')
+                    logger.info(f'{location:<35}: {decodestatus[jobs[location][1]]:>15}')
 
                 time.sleep(10)
                 logger.info('Checking status again')
                 logger.info('---------------------')
+                logger.info('')
 
-    logger.info('Done')
+    logger.info('**Done**')
 
 
 def build_single_location_artifact(path, location, log_to_file=False):
