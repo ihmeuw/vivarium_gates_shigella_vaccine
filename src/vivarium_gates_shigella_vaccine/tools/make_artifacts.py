@@ -15,7 +15,6 @@ import click
 from loguru import logger
 
 from vivarium_gates_shigella_vaccine import globals as project_globals
-from vivarium_gates_shigella_vaccine.data import builder
 from vivarium_gates_shigella_vaccine.utilites import sanitize_location
 
 from vivarium_gates_shigella_vaccine.tools.app_logging import add_logging_sink
@@ -113,6 +112,9 @@ def build_single_location_artifact(path, location, log_to_file=False):
         if log_file.exists():
             log_file.unlink()
         add_logging_sink(log_file, verbose=2)
+
+    # Local import to avoid data dependencies
+    from vivarium_gates_shigella_vaccine.data import builder
 
     logger.info(f'Building artifact for {location} at {str(path)}.')
     artifact = builder.open_artifact(path, location)
