@@ -37,7 +37,7 @@ def build_model_specifications(template: str, location: str, output_dir: str):
     elif location in project_globals.LOCATIONS:
         locations = [location]
     else:
-        raise ValueError(f'Location must be one of {project_globals.LOCATIONS}. '
+        raise ValueError(f'Location must be one of {project_globals.LOCATIONS} or the string "all". '
                          f'You specified {location}.')
 
     logger.debug(f'Reading model spec template from {str(template)}.')
