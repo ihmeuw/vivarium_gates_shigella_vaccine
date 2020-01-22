@@ -179,7 +179,7 @@ def load_shigella_remission_rate(key: EntityKey, location: str):
     data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
                                                  'yld', utility_data.get_age_group_ids())
     data[data.year_id == 2016].drop(columns='year_id')  # Use latest GBD results for all data
-    data = utilities.normalize(data, fill_value=0)
+    data = standardize.normalize(data, fill_value=0)
     data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
     data = utilities.reshape(data)
     data = utilities.scrub_gbd_conventions(data, location)
@@ -214,7 +214,7 @@ def _load_diarrhea_prevalence(location_id: int):
     data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
     data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
                                                  'yld', utility_data.get_age_group_ids())
-    data = utilities.normalize(data, fill_value=0)
+    data = standardize.normalize(data, fill_value=0)
     data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
     return utilities.reshape(data)
 
@@ -224,7 +224,7 @@ def _load_diarrhea_sequela_prevalence(sequela, location_id: int):
     data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
     data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
                                                  'yld', utility_data.get_age_group_ids())
-    data = utilities.normalize(data, fill_value=0)
+    data = standardize.normalize(data, fill_value=0)
     data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
     return utilities.reshape(data)
 
