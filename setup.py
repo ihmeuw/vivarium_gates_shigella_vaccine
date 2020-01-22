@@ -19,25 +19,21 @@ if __name__ == "__main__":
     install_requirements = [
         'vivarium==0.9.3',
         'vivarium_public_health==0.10.4',
-        'gbd_mapping==2.1.0',
-
-        # These are pinned for internal dependencies on IHME libraries
         'numpy<=1.15.4',
         'tables<=3.4.0',
         'pandas<0.25',
         'jinja2',
         'loguru',
         'click',
-      ],
-
-    data_requirements = [
-        'vivarium_inputs==3.1.1'
-    ]
+      ]
 
     extras_require = [
         # For data access
         'db_queries',
+        'get_draws',
         'xarray',
+        'netcdf4',
+        'vivarium_inputs[data]==3.1.1',
 
         # For runs on the IHME cluster
         'vivarium_cluster_tools==1.1.2',
@@ -61,7 +57,6 @@ if __name__ == "__main__":
 
         install_requires=install_requirements,
         extras_require={
-            'data': data_requirements,
             'dev': extras_require,
         },
 
@@ -69,6 +64,7 @@ if __name__ == "__main__":
 
         entry_points='''
             [console_scripts]
-            make_specs=vivarium_gates_shigella_vaccine.cli:make_specs
+            make_specs=vivarium_gates_shigella_vaccine.tools.cli:make_specs
+            make_artifacts=vivarium_gates_shigella_vaccine.tools.cli:make_artifacts
         '''
     )
