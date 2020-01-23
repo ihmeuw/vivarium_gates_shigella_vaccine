@@ -129,7 +129,7 @@ def load_location_specific_life_expectancy(key: EntityKey, location: str):
     data['age_end'] = data.age_start.shift(-1).fillna(5.01)
     data = utilities.normalize_sex(data, None, ['value'])
     data = utilities.normalize_year(data)
-    utilities.reshape(data, value_cols=['value'])
+    data = utilities.reshape(data, value_cols=['value'])
     data = utilities.scrub_gbd_conventions(data, location)
     data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
     return utilities.sort_hierarchical_data(data)
