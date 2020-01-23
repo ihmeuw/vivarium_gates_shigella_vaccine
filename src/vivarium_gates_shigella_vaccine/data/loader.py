@@ -107,6 +107,14 @@ def load_age_bins(key: EntityKey, location: str):
 
 
 def load_demographic_dimensions(key: EntityKey, location: str):
+    data = _get_raw_demographic_dimensions(location)
+    data = utilities.scrub_gbd_conventions(data, location)
+    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
+    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
+    return utilities.sort_hierarchical_data(data)
+
+
+def _get_raw_demographic_dimensions(location: str):
     location_id = extract.get_location_id(location)
     ages = utility_data.get_age_group_ids()
     years = range(project_globals.MIN_YEAR, project_globals.MAX_YEAR + 1)
@@ -118,13 +126,9 @@ def load_demographic_dimensions(key: EntityKey, location: str):
     data = (pd.MultiIndex
             .from_product(values, names=names)
             .to_frame(index=False))
-
     data = standardize.normalize(data)
     data = utilities.reshape(data)
-    data = utilities.scrub_gbd_conventions(data, location)
-    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
-    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
-    return utilities.sort_hierarchical_data(data)
+    return data
 
 
 def load_theoretical_minimum_risk_life_expectancy(key: EntityKey, location: str):
@@ -202,7 +206,8 @@ def load_shigella_remission_rate(key: EntityKey, location: str):
 def load_shigella_disability_weight(key: EntityKey, location: str):
     location_id = extract.get_location_id(location)
 
-    data = utility_data.get_demographic_dimensions(location_id, draws=True, value=0.0)
+    data = _get_raw_demographic_dimensions(location)
+    data = pd.DataFrame(0, columns=vi_globals.DRAW_COLUMNS, index=data)
     data = data.set_index(utilities.get_ordered_index_cols(data.columns.difference(vi_globals.DRAW_COLUMNS)))
 
     for sequela in causes.diarrheal_diseases.sequelae:
