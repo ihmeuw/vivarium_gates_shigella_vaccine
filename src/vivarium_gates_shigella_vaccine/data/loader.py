@@ -46,7 +46,7 @@ def get_data(lookup_key: EntityKey, location: str):
         ),
         EntityKey('cause.shigellosis.cause_specific_mortality_rate'): (
             load_forecast_data,
-            EntityKey('cause.shigellosis.cause_specific_mortality')
+            EntityKey('etiology.shigellosis.cause_specific_mortality')
         ),
         EntityKey('cause.shigellosis.incidence_rate'): (
             load_forecast_data,
