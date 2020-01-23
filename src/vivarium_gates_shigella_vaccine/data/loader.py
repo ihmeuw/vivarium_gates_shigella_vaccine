@@ -149,7 +149,7 @@ def load_live_births_by_year(key: EntityKey, location: str):
 
     asfr_data = extract.load_forecast_from_xarray(paths.forecast_data_path(asfr_key), location_id)
     asfr_data = asfr_data[(asfr_data.scenario == project_globals.FORECASTING_SCENARIO)
-                          & (asfr_data >= project_globals.MIN_YEAR)].drop(columns='scenario')
+                          & (asfr_data.year_id >= project_globals.MIN_YEAR)].drop(columns='scenario')
     asfr_data = asfr_data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
     asfr_data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
 
