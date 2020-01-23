@@ -120,6 +120,13 @@ def build_single_location_artifact(path, location, log_to_file=False):
     artifact = builder.open_artifact(path, location)
     logger.info(f'Loading and writing demographic data.')
     builder.load_and_write_demographic_data(artifact, location)
+    logger.info(f'Loading and writing cause data.')
+    builder.load_and_write_cause_data(artifact, location)
+    logger.info(f'Loading and writing vaccine data.')
+    builder.load_and_write_vaccine_data(artifact, location)
+
+    logger.info('**DONE**')
+
 
 
 if __name__ == "__main__":
