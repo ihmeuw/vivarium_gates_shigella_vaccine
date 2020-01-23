@@ -128,11 +128,7 @@ def build_single_location_artifact(path, location, log_to_file=False):
     logger.info('**DONE**')
 
 
-
 if __name__ == "__main__":
     artifact_path = sys.argv[1]
     artifact_location = sys.argv[2]
     build_single_location_artifact(artifact_path, artifact_location, log_to_file=True)
-
-
-
