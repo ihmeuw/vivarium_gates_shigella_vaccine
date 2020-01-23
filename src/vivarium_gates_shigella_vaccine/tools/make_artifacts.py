@@ -69,7 +69,7 @@ def build_all_artifacts(output_dir, verbose):
             job_template.remoteCommand = shutil.which("python")
             job_template.args = [__file__, str(path), f'"{location}"']
             job_template.nativeSpecification = (f'-V -b y -P {project_globals.CLUSTER_PROJECT} -q all.q '
-                                                f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 '
+                                                f'-l fmem=3G -l fthread=1 -l h_rt=3:00:00 -l archive=TRUE '
                                                 f'-N {sanitize_location(location)}_artifact')
             jobs[location] = (session.runJob(job_template), drmaa.JobState.UNDETERMINED)
             logger.info(f'Submitted job {jobs[location][0]} to build artifact for {location}.')
