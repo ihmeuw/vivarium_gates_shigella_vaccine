@@ -3,8 +3,8 @@ components:
         population:
             - BasePopulation()
             - Mortality()
-        #disease.models:
-        #    - SIS('shigellosis')
+        disease.models:
+            - SIS('shigellosis')
         metrics:
             - DisabilityObserver()
             - MortalityObserver()

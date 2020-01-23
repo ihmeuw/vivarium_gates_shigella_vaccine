@@ -7,6 +7,7 @@
 """
 from pathlib import Path
 
+from gbd_mapping import causes
 from loguru import logger
 import pandas as pd
 from vivarium.framework.artifact import Artifact, EntityKey, get_location_term
@@ -115,6 +116,9 @@ def load_and_write_cause_data(artifact: Artifact, location: str):
 
     key = EntityKey('cause.shigellosis.excess_mortality_rate')
     write_data(artifact, key, (csmr / prevalence).fillna(0))
+
+    key = EntityKey('cause.shigellosis.restrictions')
+    write_data(artifact, key, causes.diarrheal_diseases.restrictions.to_dict())
 
 
 def load_and_write_vaccine_data(artifact: Artifact, location: str):
