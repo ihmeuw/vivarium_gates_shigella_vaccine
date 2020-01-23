@@ -141,5 +141,5 @@ def load_and_write_vaccine_data(artifact: Artifact, location: str):
     key = EntityKey('covariate.shigella_vaccine_12mo.coverage')
     write_data(artifact, key, 0.5 * measles1_coverage * measles2_coverage)
 
-    key = EntityKey('covariate.shigella_vaccine_18mo.coverage')
+    key = EntityKey('covariate.shigella_vaccine_15mo.coverage')
     write_data(artifact, key, measles2_coverage)
