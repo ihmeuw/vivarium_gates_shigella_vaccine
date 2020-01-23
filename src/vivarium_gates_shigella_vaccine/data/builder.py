@@ -71,7 +71,7 @@ def load_and_write_data(artifact: Artifact, key: EntityKey, location: str):
         logger.debug(f'Loading data for {key} for location {location}.')
         data = loader.get_data(key, location)
         logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
+        artifact.write(str(key), data)
     return artifact.load(str(key))
 
 
@@ -80,7 +80,7 @@ def write_data(artifact: Artifact, key: EntityKey, data: pd.DataFrame):
         logger.debug(f'Data for {key} already in artifact.  Skipping...')
     else:
         logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
+        artifact.write(str(key), data)
     return artifact.load(str(key))
 
 
