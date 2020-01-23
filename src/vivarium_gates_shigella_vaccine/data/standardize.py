@@ -27,7 +27,7 @@ def normalize(data: pd.DataFrame, fill_value: Real = None,
 def normalize_year(data: pd.DataFrame) -> pd.DataFrame:
     years = range(project_globals.MIN_YEAR, project_globals.MAX_YEAR + 1)
 
-    if 'year_id' not in data:
+    if 'year_id' not in data.columns:
         # Data doesn't vary by year, so copy for each year.
         df = []
         for year in years:
