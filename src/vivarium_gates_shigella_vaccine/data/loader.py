@@ -102,8 +102,8 @@ def load_demographic_dimensions(key: EntityKey, location: str):
     ages = utility_data.get_age_group_ids()
     years = range(project_globals.MIN_YEAR, project_globals.MAX_YEAR + 1)
     sexes = [vi_globals.SEXES['Male'], vi_globals.SEXES['Female']]
-    location = [location_id]
-    values = [location, sexes, ages, years]
+    location_id = [location_id]
+    values = [location_id, sexes, ages, years]
     names = ['location_id', 'sex_id', 'age_group_id', 'year_id']
 
     data = (pd.MultiIndex
