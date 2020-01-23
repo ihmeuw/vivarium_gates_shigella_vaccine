@@ -14,25 +14,70 @@ from vivarium_gates_shigella_vaccine.data import extract, standardize, validate
 BASE_COLUMNS = ['year_start', 'year_end', 'age_group_start', 'age_group_end', 'draw', 'sex']
 
 
-def get_data(key: EntityKey, location: str):
+def get_data(lookup_key: EntityKey, location: str):
     mapping = {
-        EntityKey('population.structure'): load_population_structure,
-        EntityKey('population.age_bins'): load_age_bins,
-        EntityKey('population.demographic_dimensions'): load_demographic_dimensions,
-        EntityKey('population.theoretical_minimum_risk_life_expectancy'): load_theoretical_minimum_risk_life_expectancy,
-        EntityKey('population.location_specific_life_expectancy'): load_location_specific_life_expectancy,
-        EntityKey('cause.all_causes.cause_specific_mortality_rate'): load_all_cause_mortality_rate,
-        EntityKey('covariate.live_births_by_year.estimate'): load_live_births_by_year,
-        EntityKey('cause.shigellosis.cause_specific_mortality_rate'): load_shigella_cause_specific_mortality_rate,
-        EntityKey('cause.shigellosis.incidence_rate'): load_shigella_incidence_rate,
-        EntityKey('cause.shigellosis.remission_rate'): load_shigella_remission_rate,
-        EntityKey('cause.shigellosis.disability_weight'): load_shigella_disability_weight,
+        EntityKey('population.structure'): (
+            load_forecast_data,
+            EntityKey('population.structure')
+        ),
+        EntityKey('population.age_bins'): (
+            load_age_bins,
+            EntityKey('population.age_bins')
+        ),
+        EntityKey('population.demographic_dimensions'): (
+            load_demographic_dimensions,
+            EntityKey('population.demographic_dimensions')
+        ),
+        EntityKey('population.theoretical_minimum_risk_life_expectancy'): (
+            load_theoretical_minimum_risk_life_expectancy,
+            EntityKey('population.theoretical_minimum_risk_life_expectancy')
+        ),
+        EntityKey('population.location_specific_life_expectancy'): (
+            load_location_specific_life_expectancy,
+            EntityKey('population.location_specific_life_expectancy')
+        ),
+        EntityKey('cause.all_causes.cause_specific_mortality_rate'): (
+            load_forecast_data,
+            EntityKey('cause.all_causes.cause_specific_mortality')
+        ),
+        EntityKey('covariate.live_births_by_year.estimate'): (
+            load_live_births_by_year,
+            EntityKey('covariate.live_births_by_year.estimate')
+        ),
+        EntityKey('cause.shigellosis.cause_specific_mortality_rate'): (
+            load_shigella_cause_specific_mortality_rate,
+            EntityKey('cause.shigellosis.cause_specific_mortality')
+        ),
+        EntityKey('cause.shigellosis.incidence_rate'): (
+            load_forecast_data,
+            EntityKey('etiology.shigellosis.incidence_rate')
+        ),
+        EntityKey('cause.shigellosis.remission_rate'): (
+            load_shigella_remission_rate,
+            EntityKey('cause.shigellosis.remission_rate')
+        ),
+        EntityKey('cause.shigellosis.disability_weight'): (
+            load_shigella_disability_weight,
+            EntityKey('cause.shigellosis.disability_weight')
+        ),
+        EntityKey('covariate.dtp3_coverage_proportion.estimate'): (
+            load_forecast_data,
+            EntityKey('covariate.dtp3_coverage_proportion.estimate')
+        ),
+        EntityKey('covariate.measles_vaccine_coverage_proportion.estimate'): (
+            load_forecast_data,
+            EntityKey('covariate.measles_vaccine_coverage_proportion.estimate')
+        ),
+        EntityKey('covariate.measles_vaccine_coverage_2_doses_proportion.estimate'): (
+            load_forecast_data,
+            EntityKey('covariate.measles_vaccine_coverage_2_doses_proportion.estimate')
+        ),
     }
+    loader, access_key = mapping[lookup_key]
+    return loader(access_key, location)
 
-    return mapping[key](key, location)
 
-
-def load_population_structure(key: EntityKey, location: str):
+def load_forecast_data(key: EntityKey, location: str):
     location_id = extract.get_location_id(location)
     path = paths.forecast_data_path(key)
     data = extract.load_forecast_from_xarray(path, location_id)
@@ -90,24 +135,6 @@ def load_location_specific_life_expectancy(key: EntityKey, location: str):
     return utilities.sort_hierarchical_data(data)
 
 
-def load_all_cause_mortality_rate(key: EntityKey, location: str):
-    lookup_key = EntityKey('cause.all_causes.cause_specific_mortality')
-    location_id = extract.get_location_id(location)
-    path = paths.forecast_data_path(lookup_key)
-    data = extract.load_forecast_from_xarray(path, location_id)
-    data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
-    data = data.rename(columns={'_all': 'value'})
-    data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
-    data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
-    data = data.reset_index()
-    data = standardize.normalize(data)
-    data = utilities.reshape(data)
-    data = utilities.scrub_gbd_conventions(data, location)
-    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
-    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
-    return utilities.sort_hierarchical_data(data)
-
-
 def load_live_births_by_year(key: EntityKey, location: str):
     location_id = extract.get_location_id(location)
     asfr_key = EntityKey('covariate.age_specific_fertility_rate.estimate')
@@ -140,38 +167,6 @@ def load_live_births_by_year(key: EntityKey, location: str):
     return utilities.sort_hierarchical_data(data)
 
 
-def load_shigella_cause_specific_mortality_rate(key: EntityKey, location: str):
-    location_id = extract.get_location_id(location)
-    lookup_key = EntityKey('etiology.shigellosis.cause_specific_mortality')
-    data = extract.load_forecast_from_xarray(paths.forecast_data_path(lookup_key), location_id)
-    data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
-    data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
-    data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
-    data = data.reset_index()
-    data = standardize.normalize(data)
-    data = utilities.reshape(data)
-    data = utilities.scrub_gbd_conventions(data, location)
-    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
-    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
-    return utilities.sort_hierarchical_data(data)
-
-
-def load_shigella_incidence_rate(key: EntityKey, location: str):
-    location_id = extract.get_location_id(location)
-    lookup_key = EntityKey('etiology.shigellosis.incidence')
-    data = extract.load_forecast_from_xarray(paths.forecast_data_path(lookup_key), location_id)
-    data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
-    data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
-    data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
-    data = data.reset_index()
-    data = standardize.normalize(data)
-    data = utilities.reshape(data)
-    data = utilities.scrub_gbd_conventions(data, location)
-    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
-    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
-    return utilities.sort_hierarchical_data(data)
-
-
 def load_shigella_remission_rate(key: EntityKey, location: str):
     location_id = extract.get_location_id(location)
     data = extract.get_modelable_entity_draws(causes.diarrheal_diseases.dismod_id, location_id)
@@ -195,12 +190,12 @@ def load_shigella_disability_weight(key: EntityKey, location: str):
     data = data.set_index(utilities.get_ordered_index_cols(data.columns.difference(vi_globals.DRAW_COLUMNS)))
 
     for sequela in causes.diarrheal_diseases.sequelae:
-        prevalence = _load_diarrhea_sequela_prevalence(sequela, location_id)
+        prevalence = _load_prevalence(sequela, location_id, 'sequela')
         disability = _load_diarrhea_sequela_disability_weight(sequela, location_id)
         disability.index = disability.index.set_levels([location_id], 'location_id')
         data += prevalence * disability
 
-    diarrhea_prevalence = _load_diarrhea_prevalence(location_id)
+    diarrhea_prevalence = _load_prevalence(causes.diarrheal_diseases, location_id, 'cause')
     data = (data / diarrhea_prevalence).fillna(0).reset_index()
     data = utilities.reshape(data)
     data = utilities.scrub_gbd_conventions(data, location)
@@ -209,18 +204,8 @@ def load_shigella_disability_weight(key: EntityKey, location: str):
     return utilities.sort_hierarchical_data(data)
 
 
-def _load_diarrhea_prevalence(location_id: int):
-    data = extract.get_como_draws(causes.diarrheal_diseases.gbd_id, location_id)
-    data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
-    data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
-                                                 'yld', utility_data.get_age_group_ids())
-    data = standardize.normalize(data, fill_value=0)
-    data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
-    return utilities.reshape(data)
-
-
-def _load_diarrhea_sequela_prevalence(sequela, location_id: int):
-    data = extract.get_como_draws(sequela.gbd_id, location_id, 'sequela')
+def _load_prevalence(entity, location_id: int, entity_type: str):
+    data = extract.get_como_draws(entity.gbd_id, location_id, entity_type)
     data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
     data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
                                                  'yld', utility_data.get_age_group_ids())
@@ -237,4 +222,3 @@ def _load_diarrhea_sequela_disability_weight(sequela, location_id: int):
                                                            utility_data.get_age_group_ids())
     data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
     return utilities.reshape(data)
-
