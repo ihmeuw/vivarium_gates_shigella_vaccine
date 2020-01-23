@@ -9,7 +9,7 @@ from vivarium_inputs import utilities, interface, utility_data, globals as vi_gl
 
 from vivarium_gates_shigella_vaccine import paths
 from vivarium_gates_shigella_vaccine import globals as project_globals
-from vivarium_gates_shigella_vaccine.data import extract, standardize, validate
+from vivarium_gates_shigella_vaccine.data import extract, standardize
 
 BASE_COLUMNS = ['year_start', 'year_end', 'age_group_start', 'age_group_end', 'draw', 'sex']
 
