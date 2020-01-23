@@ -95,14 +95,11 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
         EntityKey('covariate.live_births_by_year.estimate'),
     ]
 
-    logger.debug('Loading and writing demographic data.')
     for key in keys:
         load_and_write_data(artifact, key, location)
 
 
 def load_and_write_cause_data(artifact: Artifact, location: str):
-    logger.debug('Loading and writing shigella data.')
-
     key = EntityKey('cause.shigellosis.cause_specific_mortality_rate')
     csmr = load_and_write_data(artifact, key, location)
     key = EntityKey('cause.shigellosis.disability_weight')
