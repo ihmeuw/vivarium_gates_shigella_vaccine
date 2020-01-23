@@ -218,6 +218,7 @@ def _load_prevalence(entity, location_id: int, entity_type: str):
     data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
     data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
                                                  'yld', utility_data.get_age_group_ids())
+    data[data.year_id == 2016].drop(columns='year_id')  # Use latest GBD results for all data
     data = standardize.normalize(data, fill_value=0)
     data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
     return utilities.reshape(data)
@@ -226,6 +227,7 @@ def _load_prevalence(entity, location_id: int, entity_type: str):
 def _load_diarrhea_sequela_disability_weight(sequela, location_id: int):
     data = extract.get_auxiliary_data('disability_weight', 'sequela', 'all', location_id)
     data = data.loc[data.healthstate_id == sequela.healthstate.gbd_id, :]
+    data[data.year_id == 2016].drop(columns='year_id')  # Use latest GBD results for all data
     standardize.normalize(data)
     utilities.clear_disability_weight_outside_restrictions(data, causes.diarrheal_diseases, 0.0,
                                                            utility_data.get_age_group_ids())
