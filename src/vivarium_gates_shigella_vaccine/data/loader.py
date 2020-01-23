@@ -229,7 +229,6 @@ def _load_diarrhea_sequela_disability_weight(sequela, location_id: int):
     logger.info(f'Loading disability weight for {sequela.name} from GBD 2016.')
     data = extract.get_auxiliary_data('disability_weight', 'sequela', 'all', location_id)
     data = data.loc[data.healthstate_id == sequela.healthstate.gbd_id, :]
-    data = data[data.year_id == 2016].drop(columns='year_id')  # Use latest GBD results for all data
     data = standardize.normalize(data)
     data = utilities.clear_disability_weight_outside_restrictions(data, causes.diarrheal_diseases, 0.0,
                                                                   utility_data.get_age_group_ids())
