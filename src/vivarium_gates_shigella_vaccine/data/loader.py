@@ -207,8 +207,7 @@ def load_shigella_disability_weight(key: EntityKey, location: str):
     location_id = extract.get_location_id(location)
 
     data = _get_raw_demographic_dimensions(location)
-    data = pd.DataFrame(0, columns=vi_globals.DRAW_COLUMNS, index=data)
-    data = data.set_index(utilities.get_ordered_index_cols(data.columns.difference(vi_globals.DRAW_COLUMNS)))
+    data = pd.DataFrame(0, columns=vi_globals.DRAW_COLUMNS, index=data.index)
 
     for sequela in causes.diarrheal_diseases.sequelae:
         prevalence = _load_prevalence(sequela, location_id, 'sequela')
