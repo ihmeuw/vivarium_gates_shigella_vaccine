@@ -72,7 +72,7 @@ def load_and_write_data(artifact: Artifact, key: EntityKey, location: str):
         data = loader.get_data(key, location)
         logger.debug(f'Writing data for {key} to artifact.')
         artifact.write(key, data)
-    return artifact.load(key)
+    return artifact.load(str(key))
 
 
 def write_data(artifact: Artifact, key: EntityKey, data: pd.DataFrame):
@@ -81,7 +81,7 @@ def write_data(artifact: Artifact, key: EntityKey, data: pd.DataFrame):
     else:
         logger.debug(f'Writing data for {key} to artifact.')
         artifact.write(key, data)
-    return artifact.load(key)
+    return artifact.load(str(key))
 
 
 def load_and_write_demographic_data(artifact: Artifact, location: str):
