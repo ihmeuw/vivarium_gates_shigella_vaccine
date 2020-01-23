@@ -8,6 +8,7 @@
 from pathlib import Path
 
 from loguru import logger
+import pandas as pd
 from vivarium.framework.artifact import Artifact, EntityKey, get_location_term
 
 from vivarium_gates_shigella_vaccine.data import loader
@@ -42,7 +43,7 @@ def open_artifact(output_path: Path, location: str) -> Artifact:
     return artifact
 
 
-def load_and_write(artifact: Artifact, key: EntityKey, location: str):
+def load_and_write_data(artifact: Artifact, key: EntityKey, location: str):
     """Loads data and writes it to the artifact if not already present.
 
     Parameters
@@ -74,6 +75,15 @@ def load_and_write(artifact: Artifact, key: EntityKey, location: str):
     return artifact.load(key)
 
 
+def write_data(artifact: Artifact, key: EntityKey, data: pd.DataFrame):
+    if key in artifact:
+        logger.debug(f'Data for {key} already in artifact.  Skipping...')
+    else:
+        logger.debug(f'Writing data for {key} to artifact.')
+        artifact.write(key, data)
+    return artifact.load(key)
+
+
 def load_and_write_demographic_data(artifact: Artifact, location: str):
     keys = [
         EntityKey('population.structure'),
@@ -87,53 +97,48 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
 
     logger.debug('Loading and writing demographic data.')
     for key in keys:
-        load_and_write(artifact, key, location)
+        load_and_write_data(artifact, key, location)
 
 
 def load_and_write_cause_data(artifact: Artifact, location: str):
     logger.debug('Loading and writing shigella data.')
 
     key = EntityKey('cause.shigellosis.cause_specific_mortality_rate')
-    csmr = load_and_write(artifact, key, location)
+    csmr = load_and_write_data(artifact, key, location)
     key = EntityKey('cause.shigellosis.disability_weight')
-    load_and_write(artifact, key, location)
+    load_and_write_data(artifact, key, location)
 
     key = EntityKey('cause.shigellosis.incidence_rate')
-    incidence = load_and_write(artifact, key, location)
+    incidence = load_and_write_data(artifact, key, location)
     key = EntityKey('cause.shigellosis.remission_rate')
-    remission = load_and_write(artifact, key, location)
+    remission = load_and_write_data(artifact, key, location)
 
     key = EntityKey('cause.shigellosis.prevalence')
-    if key in artifact:
-        logger.debug(f'Data for {key} already in artifact.  Skipping...')
-    else:
-        logger.debug(f'Loading data for {key} for location {location}.')
-        # Approximate prevalence as incidence * duration
-        data = incidence / remission
-        logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
-    prevalence = artifact.load(key)
+    prevalence = write_data(artifact, key, incidence / remission)
 
     key = EntityKey('cause.shigellosis.excess_mortality_rate')
-    if key in artifact:
-        logger.debug(f'Data for {key} already in artifact.  Skipping...')
-    else:
-        logger.debug(f'Loading data for {key} for location {location}.')
-        # Approximate prevalence as incidence * duration
-        data = (csmr / prevalence).fillna(0)
-        logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
+    write_data(artifact, key, (csmr / prevalence).fillna(0))
 
 
 def load_and_write_vaccine_data(artifact: Artifact, location: str):
-    keys = [
-        # EntityKey('covariate.shigella_vaccine_6mo.coverage')
-        # EntityKey('covariate.shigella_vaccine_9mo.coverage')
-        # EntityKey('covariate.shigella_vaccine_12mo.coverage')
-        # EntityKey('covariate.shigella_vaccine_18mo.coverage')
-    ]
-    pass
+    key = EntityKey('covariate.dtp3_coverage_proportion.estimate')
+    logger.debug(f'Loading data for {key} for location {location}.')
+    dtp3_coverage = loader.get_data(key, location)
+    key = EntityKey('covariate.measles_vaccine_coverage_proportion.estimate')
+    logger.debug(f'Loading data for {key} for location {location}.')
+    measles1_coverage = loader.get_data(key, location)
+    key = EntityKey('covariate.measles_vaccine_coverage_2_doses_proportion.estimate')
+    logger.debug(f'Loading data for {key} for location {location}.')
+    measles2_coverage = loader.get_data(key, location)
 
+    key = EntityKey('covariate.shigella_vaccine_6mo.coverage')
+    write_data(artifact, key, 0.5 * dtp3_coverage * measles1_coverage)
 
+    key = EntityKey('covariate.shigella_vaccine_9mo.coverage')
+    write_data(artifact, key, measles1_coverage)
 
+    key = EntityKey('covariate.shigella_vaccine_12mo.coverage')
+    write_data(artifact, key, 0.5 * measles1_coverage * measles2_coverage)
 
+    key = EntityKey('covariate.shigella_vaccine_18mo.coverage')
+    write_data(artifact, key, measles2_coverage)

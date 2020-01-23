@@ -45,7 +45,7 @@ def get_data(lookup_key: EntityKey, location: str):
             EntityKey('covariate.live_births_by_year.estimate')
         ),
         EntityKey('cause.shigellosis.cause_specific_mortality_rate'): (
-            load_shigella_cause_specific_mortality_rate,
+            load_forecast_data,
             EntityKey('cause.shigellosis.cause_specific_mortality')
         ),
         EntityKey('cause.shigellosis.incidence_rate'): (
