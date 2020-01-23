@@ -82,7 +82,14 @@ def load_forecast_data(key: EntityKey, location: str):
     path = paths.forecast_data_path(key)
     data = extract.load_forecast_from_xarray(path, location_id)
     data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
-    data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
+    if key == EntityKey('etiology.shigellosis.incidence'):
+        # Only one draw for incidence
+        data = pd.concat(
+            project_globals.NUM_DRAWS * [data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id']).values],
+            axis=1
+        )
+    else:
+        data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
     if len(data.columns) == 100:  # Not 1000 draws for everything
         data = pd.concat([data]*10, axis=1)
     data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
