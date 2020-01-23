@@ -83,6 +83,8 @@ def load_forecast_data(key: EntityKey, location: str):
     data = extract.load_forecast_from_xarray(path, location_id)
     data = data[data.scenario == project_globals.FORECASTING_SCENARIO].drop(columns='scenario')
     data = data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id', 'draw']).unstack()
+    if len(data.columns) == 100:  # Not 1000 draws for everything
+        data = pd.concat([data]*10, axis=1)
     data.columns = pd.Index([f'draw_{i}' for i in range(1000)])
     data = data.reset_index()
     data = standardize.normalize(data)
