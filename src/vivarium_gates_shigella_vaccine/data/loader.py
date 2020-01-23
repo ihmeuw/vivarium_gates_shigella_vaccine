@@ -1,6 +1,9 @@
 """Loads, standardizes and validates input data for the simulation."""
 import pandas as pd
 
+# Only using the diarrhea causes, whose metadata is stable across
+# GBD 2016 and GBD 2017
+from gbd_mapping import causes
 from vivarium.framework.artifact import EntityKey
 from vivarium_inputs import utilities, interface, utility_data, globals as vi_globals
 
@@ -22,6 +25,8 @@ def get_data(key: EntityKey, location: str):
         EntityKey('covariate.live_births_by_year.estimate'): load_live_births_by_year,
         EntityKey('cause.shigellosis.cause_specific_mortality_rate'): load_shigella_cause_specific_mortality_rate,
         EntityKey('cause.shigellosis.incidence_rate'): load_shigella_incidence_rate,
+        EntityKey('cause.shigellosis.remission_rate'): load_shigella_remission_rate,
+        EntityKey('cause.shigellosis.disability_weight'): load_shigella_disability_weight,
     }
 
     return mapping[key](key, location)
@@ -167,8 +172,69 @@ def load_shigella_incidence_rate(key: EntityKey, location: str):
     return utilities.sort_hierarchical_data(data)
 
 
+def load_shigella_remission_rate(key: EntityKey, location: str):
+    location_id = extract.get_location_id(location)
+    data = extract.get_modelable_entity_draws(causes.diarrheal_diseases.dismod_id, location_id)
+    data = data[data.measure_id == vi_globals.MEASURES['Remission rate']]
+    data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
+                                                 'yld', utility_data.get_age_group_ids())
+    data[data.year_id == 2016].drop(columns='year_id')  # Use latest GBD results for all data
+    data = standardize.normalize(data, fill_value=0)
+    data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
+    data = utilities.reshape(data)
+    data = utilities.scrub_gbd_conventions(data, location)
+    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
+    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
+    return utilities.sort_hierarchical_data(data)
 
 
+def load_shigella_disability_weight(key: EntityKey, location: str):
+    location_id = extract.get_location_id(location)
+
+    data = utility_data.get_demographic_dimensions(location_id, draws=True, value=0.0)
+    data = data.set_index(utilities.get_ordered_index_cols(data.columns.difference(vi_globals.DRAW_COLUMNS)))
+
+    for sequela in causes.diarrheal_diseases.sequelae:
+        prevalence = _load_diarrhea_sequela_prevalence(sequela, location_id)
+        disability = _load_diarrhea_sequela_disability_weight(sequela, location_id)
+        disability.index = disability.index.set_levels([location_id], 'location_id')
+        data += prevalence * disability
+
+    diarrhea_prevalence = _load_diarrhea_prevalence(location_id)
+    data = (data / diarrhea_prevalence).fillna(0).reset_index()
+    data = utilities.reshape(data)
+    data = utilities.scrub_gbd_conventions(data, location)
+    data = utilities.split_interval(data, interval_column='age', split_column_prefix='age')
+    data = utilities.split_interval(data, interval_column='year', split_column_prefix='year')
+    return utilities.sort_hierarchical_data(data)
 
 
+def _load_diarrhea_prevalence(location_id: int):
+    data = extract.get_como_draws(causes.diarrheal_diseases.gbd_id, location_id)
+    data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
+    data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
+                                                 'yld', utility_data.get_age_group_ids())
+    data = standardize.normalize(data, fill_value=0)
+    data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
+    return utilities.reshape(data)
+
+
+def _load_diarrhea_sequela_prevalence(sequela, location_id: int):
+    data = extract.get_como_draws(sequela.gbd_id, location_id, 'sequela')
+    data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
+    data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
+                                                 'yld', utility_data.get_age_group_ids())
+    data = standardize.normalize(data, fill_value=0)
+    data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
+    return utilities.reshape(data)
+
+
+def _load_diarrhea_sequela_disability_weight(sequela, location_id: int):
+    data = extract.get_auxiliary_data('disability_weight', 'sequela', 'all', location_id)
+    data = data.loc[data.healthstate_id == sequela.healthstate.gbd_id, :]
+    standardize.normalize(data)
+    utilities.clear_disability_weight_outside_restrictions(data, causes.diarrheal_diseases, 0.0,
+                                                           utility_data.get_age_group_ids())
+    data = data.filter(vi_globals.DEMOGRAPHIC_COLUMNS + vi_globals.DRAW_COLUMNS)
+    return utilities.reshape(data)
 
