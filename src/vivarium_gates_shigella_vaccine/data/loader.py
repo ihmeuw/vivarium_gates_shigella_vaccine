@@ -1,9 +1,9 @@
 """Loads, standardizes and validates input data for the simulation."""
-import pandas as pd
-
 # Only using the diarrhea causes, whose metadata is stable across
 # GBD 2016 and GBD 2017
 from gbd_mapping import causes
+from loguru import logger
+import pandas as pd
 from vivarium.framework.artifact import EntityKey
 from vivarium_inputs import utilities, interface, utility_data, globals as vi_globals
 
@@ -214,6 +214,7 @@ def load_shigella_disability_weight(key: EntityKey, location: str):
 
 
 def _load_prevalence(entity, location_id: int, entity_type: str):
+    logger.info(f'Loading prevalence for {entity.name} from GBD 2016.')
     data = extract.get_como_draws(entity.gbd_id, location_id, entity_type)
     data = data[data.measure_id == vi_globals.MEASURES['Prevalence']]
     data = utilities.filter_data_by_restrictions(data, causes.diarrheal_diseases,
@@ -225,6 +226,7 @@ def _load_prevalence(entity, location_id: int, entity_type: str):
 
 
 def _load_diarrhea_sequela_disability_weight(sequela, location_id: int):
+    logger.info(f'Loading disability weight for {sequela.name} from GBD 2016.')
     data = extract.get_auxiliary_data('disability_weight', 'sequela', 'all', location_id)
     data = data.loc[data.healthstate_id == sequela.healthstate.gbd_id, :]
     data[data.year_id == 2016].drop(columns='year_id')  # Use latest GBD results for all data
