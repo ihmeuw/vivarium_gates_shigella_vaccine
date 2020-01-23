@@ -71,6 +71,7 @@ def load_and_write(artifact: Artifact, key: EntityKey, location: str):
         data = loader.get_data(key, location)
         logger.debug(f'Writing data for {key} to artifact.')
         artifact.write(key, data)
+    return artifact.load(key)
 
 
 def load_and_write_demographic_data(artifact: Artifact, location: str):
@@ -90,15 +91,38 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
 
 
 def load_and_write_cause_data(artifact: Artifact, location: str):
-    keys = [
-        EntityKey('cause.shigellosis.cause_specific_mortality_rate'),
-        # EntityKey('cause.shigellosis.prevalence'),
-        EntityKey('cause.shigellosis.incidence_rate'),
-        EntityKey('cause.shigellosis.remission_rate'),
-        EntityKey('cause.shigellosis.disability_weight'),
-        # EntityKey('cause.shigellosis.excess_mortality_rate'),
-    ]
-    pass
+    logger.debug('Loading and writing shigella data.')
+
+    key = EntityKey('cause.shigellosis.cause_specific_mortality_rate')
+    csmr = load_and_write(artifact, key, location)
+    key = EntityKey('cause.shigellosis.disability_weight')
+    load_and_write(artifact, key, location)
+
+    key = EntityKey('cause.shigellosis.incidence_rate')
+    incidence = load_and_write(artifact, key, location)
+    key = EntityKey('cause.shigellosis.remission_rate')
+    remission = load_and_write(artifact, key, location)
+
+    key = EntityKey('cause.shigellosis.prevalence')
+    if key in artifact:
+        logger.debug(f'Data for {key} already in artifact.  Skipping...')
+    else:
+        logger.debug(f'Loading data for {key} for location {location}.')
+        # Approximate prevalence as incidence * duration
+        data = incidence / remission
+        logger.debug(f'Writing data for {key} to artifact.')
+        artifact.write(key, data)
+    prevalence = artifact.load(key)
+
+    key = EntityKey('cause.shigellosis.excess_mortality_rate')
+    if key in artifact:
+        logger.debug(f'Data for {key} already in artifact.  Skipping...')
+    else:
+        logger.debug(f'Loading data for {key} for location {location}.')
+        # Approximate prevalence as incidence * duration
+        data = (csmr / prevalence).fillna(0)
+        logger.debug(f'Writing data for {key} to artifact.')
+        artifact.write(key, data)
 
 
 def load_and_write_vaccine_data(artifact: Artifact, location: str):
