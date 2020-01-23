@@ -37,7 +37,7 @@ def open_artifact(output_path: Path, location: str) -> Artifact:
     artifact = Artifact(output_path, filter_terms=[get_location_term(location)])
 
     key = EntityKey('metadata.locations')
-    if key not in artifact:
+    if str(key) not in artifact:
         artifact.write(key, [location])
 
     return artifact
@@ -65,7 +65,7 @@ def load_and_write_data(artifact: Artifact, key: EntityKey, location: str):
         write out using ``artifact.write``.
 
     """
-    if key in artifact:
+    if str(key) in artifact:
         logger.debug(f'Data for {key} already in artifact.  Skipping...')
     else:
         logger.debug(f'Loading data for {key} for location {location}.')
@@ -76,7 +76,7 @@ def load_and_write_data(artifact: Artifact, key: EntityKey, location: str):
 
 
 def write_data(artifact: Artifact, key: EntityKey, data: pd.DataFrame):
-    if key in artifact:
+    if str(key) in artifact:
         logger.debug(f'Data for {key} already in artifact.  Skipping...')
     else:
         logger.debug(f'Writing data for {key} to artifact.')
