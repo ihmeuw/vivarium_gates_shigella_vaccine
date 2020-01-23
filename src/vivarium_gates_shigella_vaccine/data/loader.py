@@ -50,7 +50,7 @@ def get_data(lookup_key: EntityKey, location: str):
         ),
         EntityKey('cause.shigellosis.incidence_rate'): (
             load_forecast_data,
-            EntityKey('etiology.shigellosis.incidence_rate')
+            EntityKey('etiology.shigellosis.incidence')
         ),
         EntityKey('cause.shigellosis.remission_rate'): (
             load_shigella_remission_rate,
