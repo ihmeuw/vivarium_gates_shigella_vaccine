@@ -127,6 +127,13 @@ def load_location_specific_life_expectancy(key: EntityKey, location: str):
     data = extract.get_location_specific_life_expectancy(location_id)
     data = data.rename(columns={'age': 'age_start'})
     data['age_end'] = data.age_start.shift(-1).fillna(5.01)
+    earliest_year = data[data.year_id == 2025]
+    out = []
+    for year in range(project_globals.MIN_YEAR, 2025):
+        df = earliest_year.copy()
+        df['year_id'] = year
+        out.append(df)
+    data = pd.concat(out + [data], ignore_index=True)
     data = utilities.normalize_sex(data, None, ['value'])
     data = standardize.normalize_year(data)
     data = utilities.reshape(data, value_cols=['value'])
