@@ -85,7 +85,7 @@ def load_forecast_data(key: EntityKey, location: str):
     if key == EntityKey('etiology.shigellosis.incidence'):
         # Only one draw for incidence
         data = pd.concat(
-            project_globals.NUM_DRAWS * [data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id']).values],
+            project_globals.NUM_DRAWS * [data.set_index(['location_id', 'age_group_id', 'sex_id', 'year_id']).value],
             axis=1
         )
     else:
