@@ -74,7 +74,7 @@ class FertilityCrudeBirthRate:
         pop = builder.data.load('population.structure')
         pop = pop.groupby(['year_start'])['value'].sum()
         pop = pop.at[start_year]
-        live_birth_rate = initial_population_size / pop * births
+        live_birth_rate = (initial_population_size / pop) * births
         return live_birth_rate.value
 
     def __repr__(self):
