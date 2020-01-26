@@ -3,13 +3,13 @@ components:
         population:
             - BasePopulation()
             - Mortality()
-            - FertilityCrudeBirthRate()
+        disease.models:
+            - SIS('shigellosis')
         metrics:
-            - Disability()
+            - DisabilityObserver()
             - MortalityObserver()
-            - TreatmentObserver('shigellosis_vaccine')
-            - DiseaseObserver('shigellosis')
     vivarium_gates_shigella_vaccine.components:
+        - FertilityCrudeBirthRate()
 
 configuration:
     input_data:
@@ -18,10 +18,9 @@ configuration:
         artifact_path: /share/costeffectiveness/artifacts/vivarium_gates_shigella_vaccine/{{ location_sanitized }}.hdf
     interpolation:
         order: 0
-        extrapolate: True
     randomness:
         map_size: 1_000_000
-        key_columns: ['entrance_time']
+        key_columns: ['entrance_time', 'age']
         random_seed: 0
     time:
         start:
