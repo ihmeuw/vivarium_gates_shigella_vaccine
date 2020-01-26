@@ -7,6 +7,7 @@
 """
 from pathlib import Path
 
+from gbd_mapping import causes
 from loguru import logger
 import pandas as pd
 from vivarium.framework.artifact import Artifact, EntityKey, get_location_term
@@ -37,7 +38,7 @@ def open_artifact(output_path: Path, location: str) -> Artifact:
     artifact = Artifact(output_path, filter_terms=[get_location_term(location)])
 
     key = EntityKey('metadata.locations')
-    if key not in artifact:
+    if str(key) not in artifact:
         artifact.write(key, [location])
 
     return artifact
@@ -65,23 +66,23 @@ def load_and_write_data(artifact: Artifact, key: EntityKey, location: str):
         write out using ``artifact.write``.
 
     """
-    if key in artifact:
+    if str(key) in artifact:
         logger.debug(f'Data for {key} already in artifact.  Skipping...')
     else:
         logger.debug(f'Loading data for {key} for location {location}.')
         data = loader.get_data(key, location)
         logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
-    return artifact.load(key)
+        artifact.write(str(key), data)
+    return artifact.load(str(key))
 
 
 def write_data(artifact: Artifact, key: EntityKey, data: pd.DataFrame):
-    if key in artifact:
+    if str(key) in artifact:
         logger.debug(f'Data for {key} already in artifact.  Skipping...')
     else:
         logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
-    return artifact.load(key)
+        artifact.write(str(key), data)
+    return artifact.load(str(key))
 
 
 def load_and_write_demographic_data(artifact: Artifact, location: str):
@@ -95,14 +96,11 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
         EntityKey('covariate.live_births_by_year.estimate'),
     ]
 
-    logger.debug('Loading and writing demographic data.')
     for key in keys:
         load_and_write_data(artifact, key, location)
 
 
 def load_and_write_cause_data(artifact: Artifact, location: str):
-    logger.debug('Loading and writing shigella data.')
-
     key = EntityKey('cause.shigellosis.cause_specific_mortality_rate')
     csmr = load_and_write_data(artifact, key, location)
     key = EntityKey('cause.shigellosis.disability_weight')
@@ -118,6 +116,9 @@ def load_and_write_cause_data(artifact: Artifact, location: str):
 
     key = EntityKey('cause.shigellosis.excess_mortality_rate')
     write_data(artifact, key, (csmr / prevalence).fillna(0))
+
+    key = EntityKey('cause.shigellosis.restrictions')
+    write_data(artifact, key, causes.diarrheal_diseases.restrictions.to_dict())
 
 
 def load_and_write_vaccine_data(artifact: Artifact, location: str):
@@ -140,5 +141,5 @@ def load_and_write_vaccine_data(artifact: Artifact, location: str):
     key = EntityKey('covariate.shigella_vaccine_12mo.coverage')
     write_data(artifact, key, 0.5 * measles1_coverage * measles2_coverage)
 
-    key = EntityKey('covariate.shigella_vaccine_18mo.coverage')
+    key = EntityKey('covariate.shigella_vaccine_15mo.coverage')
     write_data(artifact, key, measles2_coverage)
