@@ -30,7 +30,8 @@ class ShigellaCoverage:
         self.dose_age_ranges = self.get_age_ranges(builder)
 
         self.dose_ages = pd.DataFrame(columns=self.dose_age_ranges.keys())
-        self.dose_age_randomness = builder.randomness.get_stream('dose_age')
+
+        self.dose_age_randomness = builder.randomness.get_stream('shigella_vaccine_dose_age')
 
         columns = [
             'vaccine_dose',
@@ -45,7 +46,7 @@ class ShigellaCoverage:
         self.dose_ages.append(self.sample_ages(pop_data.index))
 
         self.population_view.update(pd.DataFrame({
-            'vaccine_dose': None,
+            'vaccine_dose': 'none',
             'vaccine_event_time': pd.NaT,
         }, index=pop_data.index))
 
@@ -133,21 +134,34 @@ class ShigellaCoverage:
     @staticmethod
     def get_age_ranges(builder):
         schedule = builder.configuration.shigella_vaccine.schedule
-        days_in_year = 365.25
+        six = [to_years(180), to_years(270)]
+        nine = [to_years(270), to_years(300)]
+        twelve = [to_years(360), to_years(390)]
+        fifteen = [to_years(450), to_years(480)]
+
         age_ranges = {
             '6_9': {
-                'first': [180 / days_in_year, 270 / days_in_year],
-                'second': [270 / days_in_year, 300 / days_in_year],
+                'first': six,
+                'second': nine,
             },
             '9_12': {
-                'first': [270 / days_in_year, 300 / days_in_year],
-                'second': [360 / days_in_year, 390 / days_in_year],
+                'first': nine,
+                'second': twelve,
             },
             '9_12_15': {
-                'first': [270 / days_in_year, 300 / days_in_year],
-                'second': [360 / days_in_year, 390 / days_in_year],
-                'third': [450 / days_in_year, 480 / days_in_year]
+                'first': nine,
+                'second': twelve,
+                'third': fifteen,
             }
         }
         return age_ranges[schedule]
 
+
+def to_years(duration):
+    days_in_year = 365.25
+    seconds_in_day = 60 * 60 * 24
+
+    if isinstance(duration, pd.Timedelta):
+        duration = duration.total_seconds() / seconds_in_day
+
+    return duration / days_in_year
