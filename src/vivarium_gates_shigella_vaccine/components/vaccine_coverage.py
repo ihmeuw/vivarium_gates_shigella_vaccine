@@ -39,6 +39,7 @@ class ShigellaCoverage:
 
         columns = [
             'vaccine_dose',
+            'vaccine_dose_count',
             'vaccine_event_time',
         ]
         self.population_view = builder.population.get_view(['age', 'alive'] + columns)
