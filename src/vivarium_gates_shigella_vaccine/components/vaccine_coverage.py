@@ -1,6 +1,7 @@
-import numpy as np
 import pandas as pd
 import scipy.stats
+
+from .utilities import sample_beta, to_years
 
 
 class ShigellaCoverage:
@@ -163,14 +164,9 @@ class ShigellaCoverage:
         draw = str(builder.configuration.input_data.input_draw_number)
         stream = builder.randomness.get_stream('shigella_vaccine_catchup_proportion')
         seed = stream.get_seed(draw)
-        np.random.seed(seed)
-
         mu = builder.configuration.shigella_vaccine.catchup_fraction.mean
         sigma = builder.configuration.shigella_vaccine.catchup_fraction.sd
-        alpha = mu * (mu * (1 - mu) / sigma ** 2 - 1)
-        beta = (1 - mu) * (mu * (1 - mu) / sigma ** 2 - 1)
-
-        return scipy.stats.beta.rvs(alpha, beta)
+        return sample_beta(seed, mu, sigma)
 
     @staticmethod
     def get_age_ranges(builder):
@@ -196,13 +192,3 @@ class ShigellaCoverage:
             }
         }
         return age_ranges[schedule]
-
-
-def to_years(duration):
-    days_in_year = 365.25
-    seconds_in_day = 60 * 60 * 24
-
-    if isinstance(duration, pd.Timedelta):
-        duration = duration.total_seconds() / seconds_in_day
-
-    return duration / days_in_year
