@@ -27,7 +27,7 @@ class ShigellaCoverage:
         self.schedule = builder.configuration.shigella_vaccine.schedule
 
         self.coverage = {
-            dose: builder.lookup.build_table(coverage, key_columns=['sex'], parameter_columns=['age', 'year'])
+            dose: builder.lookup.build_table(coverage, parameter_columns=['year'])
             for dose, coverage in self.get_dose_coverages(builder).items()
         }
         self.dose_age_ranges = self.get_age_ranges(builder)
