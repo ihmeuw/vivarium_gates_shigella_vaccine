@@ -42,16 +42,27 @@ class ShigellaCoverage:
                                                  requires_streams=['dose_age'])
 
     def on_initialize_simulants(self, pop_data):
-        dose_ages = pd.DataFrame(index=pop_data.index)
-        for dose, (age_min, age_max) in self.dose_age_ranges.items():
-            dose_age_draw = self.dose_age_randomness.get_draw(pop_data.index, additional_key=dose)
-            dose_ages[dose] = (age_max - age_min)*dose_age_draw + age_min
-        self.dose_ages.append(dose_ages)
+        self.dose_ages.append(self.sample_ages(pop_data.index))
 
         self.population_view.update(pd.DataFrame({
             'vaccine_dose': None,
             'vaccine_event_time': pd.NaT,
         }, index=pop_data.index))
+
+    def sample_ages(self, index):
+        dose_ages = pd.DataFrame(index=index)
+        for dose, (age_min, age_max) in self.dose_age_ranges.items():
+            dose_age_draw = self.dose_age_randomness.get_draw(index, additional_key=dose)
+
+            mean_age = (age_min + age_max) / 2
+            age_std_dev = (mean_age - age_min) / 3
+
+            age_at_dose = scipy.stats.norm(mean_age, age_std_dev).ppf(dose_age_draw)
+            age_at_dose[age_at_dose > age_max] = age_max * 0.99
+            age_at_dose[age_at_dose < age_min] = age_min * 1.01
+            dose_ages[dose] = age_at_dose
+
+        return dose_ages
 
     def get_dose_coverages(self, builder):
         schedule = builder.configuration.shigella_vaccine.schedule
@@ -139,3 +150,4 @@ class ShigellaCoverage:
             }
         }
         return age_ranges[schedule]
+
