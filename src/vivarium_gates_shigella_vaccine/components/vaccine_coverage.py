@@ -79,6 +79,8 @@ class ShigellaCoverage:
             # Missed first, missed, second
             pop = self.dose(pop, dose='catchup', prior_dose='none', age_mask=age_eligible, event_time=event.time)
 
+        self.population_view.update(pop)
+
     def sample_ages(self, index):
         dose_ages = pd.DataFrame(index=index)
         for dose, (age_min, age_max) in self.dose_age_ranges.items():
