@@ -27,6 +27,10 @@ class ShigellaCoverage:
             dose: builder.lookup.build_table(coverage, key_columns=['sex'], parameter_columns=['age', 'year'])
             for dose, coverage in self.get_dose_coverages(builder).items()
         }
+        self.dose_age_ranges = self.get_age_ranges(builder)
+
+        self.dose_ages = pd.DataFrame(columns=self.dose_age_ranges.keys())
+        self.dose_age_randomness = builder.randomness.get_stream('dose_age')
 
         columns = [
             'vaccine_dose',
@@ -38,6 +42,12 @@ class ShigellaCoverage:
                                                  requires_streams=['dose_age'])
 
     def on_initialize_simulants(self, pop_data):
+        dose_ages = pd.DataFrame(index=pop_data.index)
+        for dose, (age_min, age_max) in self.dose_age_ranges.items():
+            dose_age_draw = self.dose_age_randomness.get_draw(pop_data.index, additional_key=dose)
+            dose_ages[dose] = (age_max - age_min)*dose_age_draw + age_min
+        self.dose_ages.append(dose_ages)
+
         self.population_view.update(pd.DataFrame({
             'vaccine_dose': None,
             'vaccine_event_time': pd.NaT,
@@ -109,6 +119,23 @@ class ShigellaCoverage:
 
         return scipy.stats.beta.rvs(alpha, beta)
 
-
-
-
+    @staticmethod
+    def get_age_ranges(builder):
+        schedule = builder.configuration.shigella_vaccine.schedule
+        days_in_year = 365.25
+        age_ranges = {
+            '6_9': {
+                'first': [180 / days_in_year, 270 / days_in_year],
+                'second': [270 / days_in_year, 300 / days_in_year],
+            },
+            '9_12': {
+                'first': [270 / days_in_year, 300 / days_in_year],
+                'second': [360 / days_in_year, 390 / days_in_year],
+            },
+            '9_12_15': {
+                'first': [270 / days_in_year, 300 / days_in_year],
+                'second': [360 / days_in_year, 390 / days_in_year],
+                'third': [450 / days_in_year, 480 / days_in_year]
+            }
+        }
+        return age_ranges[schedule]
