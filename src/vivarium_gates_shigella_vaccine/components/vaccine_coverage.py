@@ -23,6 +23,8 @@ class ShigellaCoverage:
         return 'shigella_vaccine_coverage'
 
     def setup(self, builder):
+        self.schedule = builder.configuration.shigella_vaccine.schedule
+
         self.coverage = {
             dose: builder.lookup.build_table(coverage, key_columns=['sex'], parameter_columns=['age', 'year'])
             for dose, coverage in self.get_dose_coverages(builder).items()
@@ -31,6 +33,7 @@ class ShigellaCoverage:
 
         self.dose_ages = pd.DataFrame(columns=self.dose_age_ranges.keys())
 
+        self.dose_randomness = builder.randomness.get_stream('shigella_vaccine_dose')
         self.dose_age_randomness = builder.randomness.get_stream('shigella_vaccine_dose_age')
 
         columns = [
@@ -42,13 +45,39 @@ class ShigellaCoverage:
                                                  creates_columns=columns,
                                                  requires_streams=['dose_age'])
 
+        builder.event.register_listener('time_step', self.on_time_step)
+
     def on_initialize_simulants(self, pop_data):
         self.dose_ages.append(self.sample_ages(pop_data.index))
 
         self.population_view.update(pd.DataFrame({
             'vaccine_dose': 'none',
+            'vaccine_dose_count': 0,
             'vaccine_event_time': pd.NaT,
         }, index=pop_data.index))
+
+    def on_time_step(self, event):
+        pop = self.population_view.get(event.index, query='alive == "alive"')
+
+        age_eligible = self.dose_age_mask(pop, 'first', event.step_size)
+
+        pop = self.dose(pop, dose='first', prior_dose='none', age_mask=age_eligible, event_time=event.time)
+
+        age_eligible = self.dose_age_mask(pop, 'second', event.step_size)
+
+        pop = self.dose(pop, dose='second', prior_dose='first', age_mask=age_eligible, event_time=event.time)
+        pop = self.dose(pop, dose='catchup', prior_dose='none', age_mask=age_eligible, event_time=event.time)
+
+        if self.schedule == '9_12_15':
+            age_eligible = self.dose_age_mask(pop, 'third', event.step_size)
+
+            pop = self.dose(pop, dose='third', prior_dose='second', age_mask=age_eligible, event_time=event.time)
+            # Got first, missed second
+            pop = self.dose(pop, dose='catchup', prior_dose='first', age_mask=age_eligible, event_time=event.time)
+            # Missed first, got second
+            pop = self.dose(pop, dose='catchup', prior_dose='catchup', age_mask=age_eligible, event_time=event.time)
+            # Missed first, missed, second
+            pop = self.dose(pop, dose='catchup', prior_dose='none', age_mask=age_eligible, event_time=event.time)
 
     def sample_ages(self, index):
         dose_ages = pd.DataFrame(index=index)
@@ -64,6 +93,19 @@ class ShigellaCoverage:
             dose_ages[dose] = age_at_dose
 
         return dose_ages
+
+    def dose_age_mask(self, pop, dose, step_size):
+        dose_age = self.dose_ages.loc[pop.index, dose]
+        return (pop.age < dose_age) & (dose_age <= pop.age + to_years(step_size))
+
+    def dose(self, pop, dose, prior_dose, age_mask, event_time):
+        dose_eligible = pop[(pop.vaccine_dose == prior_dose) & age_mask]
+        dose_coverage = self.coverage[dose](dose_eligible.index)
+        received_dose = self.dose_randomness.filter_for_probability(dose_eligible, dose_coverage, additional_key=dose)
+        pop.loc[received_dose, 'vaccine_dose'] = dose
+        pop.loc[received_dose, 'vaccine_dose_count'] += 1
+        pop.loc[received_dose, 'vaccine_event_time'] = event_time
+        return pop
 
     def get_dose_coverages(self, builder):
         schedule = builder.configuration.shigella_vaccine.schedule
@@ -102,11 +144,8 @@ class ShigellaCoverage:
 
             dose_coverage['first'] = first
             dose_coverage['second'] = second / first
-            dose_coverage['catchup_1a'] = catchup_proportion
-
             dose_coverage['third'] = third / (second / first)
-            dose_coverage['catchup_2'] = catchup_proportion
-            dose_coverage['catchup_1b'] = catchup_proportion
+            dose_coverage['catchup'] = catchup_proportion
 
         else:
             raise ValueError(f'Unknown vaccine schedule {schedule}.')
