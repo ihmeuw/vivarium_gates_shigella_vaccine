@@ -10,6 +10,8 @@ components:
             - MortalityObserver()
     vivarium_gates_shigella_vaccine.components:
         - FertilityCrudeBirthRate()
+        - ShigellaCoverage()
+        - ShigellaEffect()
 
 configuration:
     input_data:
@@ -38,7 +40,17 @@ configuration:
         age_end: 5
         exit_age: 5
     shigellosis_vaccine:
-        scenario: nine_twelve_minimal
+        schedule: '6_9'
+        catchup_fraction:
+            mean: 0.34
+            sd: 0.21
+        immunity_duration: 720
+        efficacy:
+            mean: 0.5
+            sd: 0.1
+        single_dose_protected: 0.7
+        waning_rate: 0.038
+        onset_delay: 14
     metrics:
         shigellosis_vaccine_observer:
                 by_age: True
