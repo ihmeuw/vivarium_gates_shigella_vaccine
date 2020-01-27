@@ -7,7 +7,7 @@ class ShigellaVaccineObserver:
 
     configuration_defaults = {
         'metrics': {
-            'shigella_vaccine_observer': {
+            'shigellosis_vaccine_observer': {
                 'by_age': False,
                 'by_year': False,
                 'by_sex': False,
@@ -17,7 +17,7 @@ class ShigellaVaccineObserver:
 
     @property
     def name(self):
-        return f'shigella_vaccine_observer'
+        return f'shigellosis_vaccine_observer'
 
     def setup(self, builder):
         self.schedule = builder.configuration.shigellosis_vaccine.schedule
