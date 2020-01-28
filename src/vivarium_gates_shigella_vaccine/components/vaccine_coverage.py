@@ -1,12 +1,13 @@
-import numpy as np
 import pandas as pd
 import scipy.stats
+
+from .utilities import sample_beta, to_years
 
 
 class ShigellaCoverage:
 
     configuration_defaults = {
-        'shigella_vaccine': {
+        'shigellosis_vaccine': {
             'schedule': '6_9',
             'catchup_fraction': {
                 'mean': 0.34,
@@ -23,32 +24,67 @@ class ShigellaCoverage:
         return 'shigella_vaccine_coverage'
 
     def setup(self, builder):
+        self.schedule = builder.configuration.shigellosis_vaccine.schedule
+
         self.coverage = {
-            dose: builder.lookup.build_table(coverage, key_columns=['sex'], parameter_columns=['age', 'year'])
+            dose: builder.lookup.build_table(coverage.reset_index(), parameter_columns=['year'])
             for dose, coverage in self.get_dose_coverages(builder).items()
         }
         self.dose_age_ranges = self.get_age_ranges(builder)
 
         self.dose_ages = pd.DataFrame(columns=self.dose_age_ranges.keys())
 
+        self.dose_randomness = builder.randomness.get_stream('shigella_vaccine_dose')
         self.dose_age_randomness = builder.randomness.get_stream('shigella_vaccine_dose_age')
 
         columns = [
             'vaccine_dose',
+            'vaccine_dose_count',
             'vaccine_event_time',
         ]
         self.population_view = builder.population.get_view(['age', 'alive'] + columns)
         builder.population.initializes_simulants(self.on_initialize_simulants,
                                                  creates_columns=columns,
-                                                 requires_streams=['dose_age'])
+                                                 requires_streams=['shigella_vaccine_dose_age'])
+
+        builder.event.register_listener('time_step', self.on_time_step)
 
     def on_initialize_simulants(self, pop_data):
-        self.dose_ages.append(self.sample_ages(pop_data.index))
+        self.dose_ages = self.dose_ages.append(self.sample_ages(pop_data.index))
 
         self.population_view.update(pd.DataFrame({
             'vaccine_dose': 'none',
+            'vaccine_dose_count': 0,
             'vaccine_event_time': pd.NaT,
         }, index=pop_data.index))
+
+    def on_time_step(self, event):
+        pop = self.population_view.get(event.index, query='alive == "alive"')
+
+        age_eligible = self.dose_age_mask(pop, 'first', event.step_size)
+
+        pop = self.dose(pop, dose='first', prior_dose='none', age_mask=age_eligible, event_time=event.time)
+
+        age_eligible = self.dose_age_mask(pop, 'second', event.step_size)
+
+        pop = self.dose(pop, dose='second', prior_dose='first', age_mask=age_eligible, event_time=event.time)
+        pop = self.dose(pop, dose='catchup', prior_dose='none', age_mask=age_eligible, event_time=event.time)
+
+        if self.schedule == '9_12_15':
+            age_eligible = self.dose_age_mask(pop, 'third', event.step_size)
+
+            pop = self.dose(pop, dose='third', prior_dose='second', age_mask=age_eligible, event_time=event.time)
+            # Got first, missed second
+            pop = self.dose(pop, dose='catchup', prior_dose='first', age_mask=age_eligible, event_time=event.time,
+                            label='late_catchup_missed_2')
+            # Missed first, got second
+            pop = self.dose(pop, dose='catchup', prior_dose='catchup', age_mask=age_eligible, event_time=event.time,
+                            label='late_catchup_missed_1')
+            # Missed first, missed, second
+            pop = self.dose(pop, dose='catchup', prior_dose='none', age_mask=age_eligible, event_time=event.time,
+                            label='late_catchup_missed_1_2')
+
+        self.population_view.update(pop)
 
     def sample_ages(self, index):
         dose_ages = pd.DataFrame(index=index)
@@ -65,8 +101,22 @@ class ShigellaCoverage:
 
         return dose_ages
 
+    def dose_age_mask(self, pop, dose, step_size):
+        dose_age = self.dose_ages.loc[pop.index, dose]
+        return (pop.age < dose_age) & (dose_age <= pop.age + to_years(step_size))
+
+    def dose(self, pop, dose, prior_dose, age_mask, event_time, label=None):
+        dose_eligible = pop[(pop.vaccine_dose == prior_dose) & age_mask]
+        dose_coverage = self.coverage[dose](dose_eligible.index)
+        received_dose = self.dose_randomness.filter_for_probability(dose_eligible.index, dose_coverage,
+                                                                    additional_key=dose)
+        pop.loc[received_dose, 'vaccine_dose'] = label if label is not None else dose
+        pop.loc[received_dose, 'vaccine_dose_count'] += 1
+        pop.loc[received_dose, 'vaccine_event_time'] = event_time
+        return pop
+
     def get_dose_coverages(self, builder):
-        schedule = builder.configuration.shigella_vaccine.schedule
+        schedule = builder.configuration.shigellosis_vaccine.schedule
         catchup_proportion = self.sample_catchup_proportion(builder)
 
         coverage = {}
@@ -102,11 +152,8 @@ class ShigellaCoverage:
 
             dose_coverage['first'] = first
             dose_coverage['second'] = second / first
-            dose_coverage['catchup_1a'] = catchup_proportion
-
             dose_coverage['third'] = third / (second / first)
-            dose_coverage['catchup_2'] = catchup_proportion
-            dose_coverage['catchup_1b'] = catchup_proportion
+            dose_coverage['catchup'] = catchup_proportion
 
         else:
             raise ValueError(f'Unknown vaccine schedule {schedule}.')
@@ -122,18 +169,13 @@ class ShigellaCoverage:
         draw = str(builder.configuration.input_data.input_draw_number)
         stream = builder.randomness.get_stream('shigella_vaccine_catchup_proportion')
         seed = stream.get_seed(draw)
-        np.random.seed(seed)
-
-        mu = builder.configuration.shigella_vaccine.catchup_fraction.mean
-        sigma = builder.configuration.shigella_vaccine.catchup_fraction.sd
-        alpha = mu * (mu * (1 - mu) / sigma ** 2 - 1)
-        beta = (1 - mu) * (mu * (1 - mu) / sigma ** 2 - 1)
-
-        return scipy.stats.beta.rvs(alpha, beta)
+        mu = builder.configuration.shigellosis_vaccine.catchup_fraction.mean
+        sigma = builder.configuration.shigellosis_vaccine.catchup_fraction.sd
+        return sample_beta(seed, mu, sigma)
 
     @staticmethod
     def get_age_ranges(builder):
-        schedule = builder.configuration.shigella_vaccine.schedule
+        schedule = builder.configuration.shigellosis_vaccine.schedule
         six = [to_years(180), to_years(270)]
         nine = [to_years(270), to_years(300)]
         twelve = [to_years(360), to_years(390)]
@@ -155,13 +197,3 @@ class ShigellaCoverage:
             }
         }
         return age_ranges[schedule]
-
-
-def to_years(duration):
-    days_in_year = 365.25
-    seconds_in_day = 60 * 60 * 24
-
-    if isinstance(duration, pd.Timedelta):
-        duration = duration.total_seconds() / seconds_in_day
-
-    return duration / days_in_year
