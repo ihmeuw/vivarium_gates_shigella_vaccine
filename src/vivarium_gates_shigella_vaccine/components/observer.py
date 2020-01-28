@@ -5,12 +5,14 @@ from vivarium_public_health.metrics import MortalityObserver
 from vivarium_public_health.metrics.utilities import (get_age_bins, QueryString, get_group_counts,
                                                       get_output_template, get_years_of_life_lost)
 
+from vivarium_gates_shigella_vaccine import globals as project_globals
+
 
 class ShigellaVaccineObserver:
 
     configuration_defaults = {
         'metrics': {
-            'shigellosis_vaccine_observer': {
+            f'{project_globals.SHIGELLA_VACCINE}_observer': {
                 'by_age': False,
                 'by_year': False,
                 'by_sex': False,
@@ -20,7 +22,7 @@ class ShigellaVaccineObserver:
 
     @property
     def name(self):
-        return f'shigellosis_vaccine_observer'
+        return f'{project_globals.SHIGELLA_VACCINE}_observer'
 
     def setup(self, builder):
         self.schedule = builder.configuration.shigellosis_vaccine.schedule
@@ -45,14 +47,12 @@ class ShigellaVaccineObserver:
         pop = self.population_view.get(event.index)
         pop = pop.loc[pop[f'vaccine_event_time'] == event.time]
 
-        doses = ['first', 'second', 'third', 'catchup',
-                 'late_catchup_missed_1', 'late_catchup_missed_2', 'late_catchup_missed_1_2']
         dose_counts = {}
-        for dose in doses:
+        for dose in project_globals.DOSES:
             dose_filter = base_filter + f'vaccine_dose == "{dose}"'
             group_counts = get_group_counts(pop, dose_filter, base_key, self.config, self.age_bins)
             for group_key, count in group_counts.items():
-                group_key = group_key.substitute(measure=f'shigellosis_vaccine_{dose}_dose_count')
+                group_key = group_key.substitute(measure=f'{project_globals.SHIGELLA_VACCINE}_{dose}_dose_count')
                 dose_counts[group_key] = count
 
         self.counts.update(dose_counts)
@@ -70,7 +70,7 @@ class LocationSpecificMortalityObserver(MortalityObserver):
     def setup(self, builder):
         super().setup(builder)
 
-        self.location_specific_life_expectancy = builder.data.load('population.location_specific_life_expectancy')
+        self.location_specific_life_expectancy = builder.data.load(project_globals.POPULATION_LSLE)
         # Hack columns to make splitting the pop table a bit easier
         # We end up with ['sex', 'year', 'age_group', 'value']
         age_groups = self.location_specific_life_expectancy['age_start']

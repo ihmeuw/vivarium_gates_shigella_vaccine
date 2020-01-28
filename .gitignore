@@ -125,3 +125,5 @@ dmypy.json
 
 # Pycharm project settings
 .idea/
+
+src/vivarium_gates_shigella_vaccine/model_specifications/*.yaml

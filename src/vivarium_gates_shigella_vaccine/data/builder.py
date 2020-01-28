@@ -12,6 +12,7 @@ from loguru import logger
 import pandas as pd
 from vivarium.framework.artifact import Artifact, EntityKey, get_location_term
 
+from vivarium_gates_shigella_vaccine import globals as project_globals
 from vivarium_gates_shigella_vaccine.data import loader
 
 
@@ -37,7 +38,7 @@ def open_artifact(output_path: Path, location: str) -> Artifact:
 
     artifact = Artifact(output_path, filter_terms=[get_location_term(location)])
 
-    key = EntityKey('metadata.locations')
+    key = EntityKey(project_globals.METADATA_LOCATIONS)
     if str(key) not in artifact:
         artifact.write(key, [location])
 
@@ -87,13 +88,13 @@ def write_data(artifact: Artifact, key: EntityKey, data: pd.DataFrame):
 
 def load_and_write_demographic_data(artifact: Artifact, location: str):
     keys = [
-        EntityKey('population.structure'),
-        EntityKey('population.age_bins'),
-        EntityKey('population.demographic_dimensions'),
-        EntityKey('population.theoretical_minimum_risk_life_expectancy'),
-        EntityKey('population.location_specific_life_expectancy'),
-        EntityKey('cause.all_causes.cause_specific_mortality_rate'),
-        EntityKey('covariate.live_births_by_year.estimate'),
+        EntityKey(project_globals.POPULATION_STRUCTURE),
+        EntityKey(project_globals.POPULATION_AGE_BINS),
+        EntityKey(project_globals.POPULATION_DEMOGRAPHY),
+        EntityKey(project_globals.POPULATION_TMRLE),  # Theoretical life expectancy
+        EntityKey(project_globals.POPULATION_LSLE),  # Location specific life expectancy
+        EntityKey(project_globals.ALL_CAUSE_CSMR),
+        EntityKey(project_globals.COVARIATE_LIVE_BIRTHS),
     ]
 
     for key in keys:
@@ -101,45 +102,45 @@ def load_and_write_demographic_data(artifact: Artifact, location: str):
 
 
 def load_and_write_cause_data(artifact: Artifact, location: str):
-    key = EntityKey('cause.shigellosis.cause_specific_mortality_rate')
+    key = EntityKey(project_globals.SHIGELLA_CSMR)
     csmr = load_and_write_data(artifact, key, location)
-    key = EntityKey('cause.shigellosis.disability_weight')
+    key = EntityKey(project_globals.SHIGELLA_DISABILITY_WEIGHT)
     load_and_write_data(artifact, key, location)
 
-    key = EntityKey('cause.shigellosis.incidence_rate')
+    key = EntityKey(project_globals.SHIGELLA_INCIDENCE_RATE)
     incidence = load_and_write_data(artifact, key, location)
-    key = EntityKey('cause.shigellosis.remission_rate')
+    key = EntityKey(project_globals.SHIGELLA_REMISSION_RATE)
     remission = load_and_write_data(artifact, key, location)
 
-    key = EntityKey('cause.shigellosis.prevalence')
+    key = EntityKey(project_globals.SHIGELLA_PREVALENCE)
     prevalence = write_data(artifact, key, incidence / remission)
 
-    key = EntityKey('cause.shigellosis.excess_mortality_rate')
+    key = EntityKey(project_globals.SHIGELLA_EMR)
     write_data(artifact, key, (csmr / prevalence).fillna(0))
 
-    key = EntityKey('cause.shigellosis.restrictions')
+    key = EntityKey(project_globals.SHIGELLA_RESTRICTIONS)
     write_data(artifact, key, causes.diarrheal_diseases.restrictions.to_dict())
 
 
 def load_and_write_vaccine_data(artifact: Artifact, location: str):
-    key = EntityKey('covariate.dtp3_coverage_proportion.estimate')
+    key = EntityKey(project_globals.COVARIATE_DTP3)
     logger.debug(f'Loading data for {key} for location {location}.')
     dtp3_coverage = loader.get_data(key, location)
-    key = EntityKey('covariate.measles_vaccine_coverage_proportion.estimate')
+    key = EntityKey(project_globals.COVARIATE_MEASLES1)
     logger.debug(f'Loading data for {key} for location {location}.')
     measles1_coverage = loader.get_data(key, location)
-    key = EntityKey('covariate.measles_vaccine_coverage_2_doses_proportion.estimate')
+    key = EntityKey(project_globals.COVARIATE_MEASLES2)
     logger.debug(f'Loading data for {key} for location {location}.')
     measles2_coverage = loader.get_data(key, location)
 
-    key = EntityKey('covariate.shigella_vaccine_6mo.coverage')
+    key = EntityKey(project_globals.COVARIATE_SHIGELLA_6MO)
     write_data(artifact, key, 0.5 * dtp3_coverage * measles1_coverage)
 
-    key = EntityKey('covariate.shigella_vaccine_9mo.coverage')
+    key = EntityKey(project_globals.COVARIATE_SHIGELLA_9MO)
     write_data(artifact, key, measles1_coverage)
 
-    key = EntityKey('covariate.shigella_vaccine_12mo.coverage')
+    key = EntityKey(project_globals.COVARIATE_SHIGELLA_12MO)
     write_data(artifact, key, 0.5 * measles1_coverage * measles2_coverage)
 
-    key = EntityKey('covariate.shigella_vaccine_15mo.coverage')
+    key = EntityKey(project_globals.COVARIATE_SHIGELLA_15MO)
     write_data(artifact, key, measles2_coverage)
