@@ -1,6 +1,8 @@
 import numpy as np
 from vivarium_public_health import utilities
 
+from vivarium_gates_shigella_vaccine import globals as project_globals
+
 
 class FertilityCrudeBirthRate:
     """Population-level model of births using crude birth rate.
@@ -36,7 +38,7 @@ class FertilityCrudeBirthRate:
     def setup(self, builder):
         self.birth_rate = self.load_birth_rate(builder)
         self.clock = builder.time.clock()
-        self.randomness = builder.randomness.get_stream('crude_birth_rate')
+        self.randomness = builder.randomness.get_stream(self.name)
         self.simulant_creator = builder.population.get_simulant_creator()
         builder.event.register_listener('time_step', self.on_time_step)
 
@@ -68,10 +70,10 @@ class FertilityCrudeBirthRate:
     def load_birth_rate(builder):
         initial_population_size = builder.configuration.population.population_size
         start_year = builder.configuration.time.start.year
-        births = (builder.data.load('covariate.live_births_by_year.estimate')
+        births = (builder.data.load(project_globals.COVARIATE_LIVE_BIRTHS)
                   .drop(columns='year_end')
                   .set_index('year_start'))
-        pop = builder.data.load('population.structure')
+        pop = builder.data.load(project_globals.POPULATION_STRUCTURE)
         pop = pop[pop.age_end <= builder.configuration.population.age_end]
         pop = pop.groupby(['year_start'])['value'].sum()
         pop = pop.at[start_year]

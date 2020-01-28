@@ -1,13 +1,15 @@
 import numpy as np
 import pandas as pd
 
+from vivarium_gates_shigella_vaccine import globals as project_globals
+
 from .utilities import sample_beta
 
 
 class ShigellaEffect:
 
     configuration_defaults = {
-        'shigellosis_vaccine': {
+        project_globals.SHIGELLA_VACCINE: {
             'immunity_duration': 720,
             'efficacy': {
                 'mean': .5,
@@ -20,7 +22,7 @@ class ShigellaEffect:
     }
 
     def name(self):
-        return 'shigella_vaccine_effect'
+        return f'{project_globals.SHIGELLA_VACCINE}_effect'
 
     def setup(self, builder):
         self.clock = builder.time.clock()
