@@ -26,10 +26,11 @@ class ShigellaCoverage:
     def setup(self, builder):
         self.schedule = builder.configuration.shigellosis_vaccine.schedule
 
-        self.coverage = {
-            dose: builder.lookup.build_table(coverage.reset_index(), parameter_columns=['year'])
-            for dose, coverage in self.get_dose_coverages(builder).items()
-        }
+        self.coverage = {}
+        for dose, coverage in self.get_dose_coverages(builder).items():
+            coverage = builder.lookup.build_table(coverage.reset_index(), parameter_columns=['year'])
+            self.coverage[dose] = coverage
+
         self.dose_age_ranges = self.get_age_ranges(builder)
 
         self.dose_ages = pd.DataFrame(columns=self.dose_age_ranges.keys())
