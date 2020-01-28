@@ -115,11 +115,3 @@ class LocationSpecificMortalityObserver(MortalityObserver):
             return self.location_specific_life_expectancy.set_index(index_cols).loc[lookup_index].value
         else:
             return pd.Series([0])
-
-
-
-
-
-
-
-
