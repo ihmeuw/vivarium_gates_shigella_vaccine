@@ -64,12 +64,12 @@ class ShigellaCoverage:
     def on_time_step(self, event):
         pop = self.population_view.get(event.index, query='alive == "alive"')
 
-        age_eligible = self.dose_age_mask(pop, project_globals.DOSES.NONE, event.step_size)
+        age_eligible = self.dose_age_mask(pop, project_globals.DOSES.FIRST, event.step_size)
 
         pop = self.dose(pop, dose=project_globals.DOSES.FIRST, prior_dose=project_globals.DOSES.NONE,
                         age_mask=age_eligible, event_time=event.time)
 
-        age_eligible = self.dose_age_mask(pop, project_globals.DOSES.FIRST, event.step_size)
+        age_eligible = self.dose_age_mask(pop, project_globals.DOSES.SECOND, event.step_size)
 
         pop = self.dose(pop, dose=project_globals.DOSES.SECOND, prior_dose=project_globals.DOSES.FIRST,
                         age_mask=age_eligible, event_time=event.time)
