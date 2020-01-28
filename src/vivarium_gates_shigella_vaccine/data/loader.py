@@ -16,61 +16,61 @@ BASE_COLUMNS = ['year_start', 'year_end', 'age_group_start', 'age_group_end', 'd
 
 def get_data(lookup_key: EntityKey, location: str):
     mapping = {
-        EntityKey('population.structure'): (
+        EntityKey(project_globals.POPULATION_STRUCTURE): (
             load_forecast_data,
-            EntityKey('population.structure')
+            EntityKey(project_globals.POPULATION_STRUCTURE)
         ),
-        EntityKey('population.age_bins'): (
+        EntityKey(project_globals.POPULATION_AGE_BINS): (
             load_age_bins,
-            EntityKey('population.age_bins')
+            EntityKey(project_globals.POPULATION_AGE_BINS)
         ),
-        EntityKey('population.demographic_dimensions'): (
+        EntityKey(project_globals.POPULATION_DEMOGRAPHY): (
             load_demographic_dimensions,
-            EntityKey('population.demographic_dimensions')
+            EntityKey(project_globals.POPULATION_DEMOGRAPHY)
         ),
-        EntityKey('population.theoretical_minimum_risk_life_expectancy'): (
+        EntityKey(project_globals.POPULATION_TMRLE): (
             load_theoretical_minimum_risk_life_expectancy,
-            EntityKey('population.theoretical_minimum_risk_life_expectancy')
+            EntityKey(project_globals.POPULATION_TMRLE)
         ),
-        EntityKey('population.location_specific_life_expectancy'): (
+        EntityKey(project_globals.POPULATION_LSLE): (
             load_location_specific_life_expectancy,
-            EntityKey('population.location_specific_life_expectancy')
+            EntityKey(project_globals.POPULATION_LSLE)
         ),
-        EntityKey('cause.all_causes.cause_specific_mortality_rate'): (
+        EntityKey(project_globals.ALL_CAUSE_CSMR): (
             load_forecast_data,
             EntityKey('cause.all_causes.cause_specific_mortality')
         ),
-        EntityKey('covariate.live_births_by_year.estimate'): (
+        EntityKey(project_globals.COVARIATE_LIVE_BIRTHS): (
             load_live_births_by_year,
-            EntityKey('covariate.live_births_by_year.estimate')
+            EntityKey(project_globals.COVARIATE_LIVE_BIRTHS)
         ),
-        EntityKey('cause.shigellosis.cause_specific_mortality_rate'): (
+        EntityKey(project_globals.SHIGELLA_CSMR): (
             load_forecast_data,
             EntityKey('etiology.shigellosis.cause_specific_mortality')
         ),
-        EntityKey('cause.shigellosis.incidence_rate'): (
+        EntityKey(project_globals.SHIGELLA_INCIDENCE_RATE): (
             load_forecast_data,
             EntityKey('etiology.shigellosis.incidence')
         ),
-        EntityKey('cause.shigellosis.remission_rate'): (
+        EntityKey(project_globals.SHIGELLA_REMISSION_RATE): (
             load_shigella_remission_rate,
-            EntityKey('cause.shigellosis.remission_rate')
+            EntityKey(project_globals.SHIGELLA_REMISSION_RATE)
         ),
-        EntityKey('cause.shigellosis.disability_weight'): (
+        EntityKey(project_globals.SHIGELLA_DISABILITY_WEIGHT): (
             load_shigella_disability_weight,
-            EntityKey('cause.shigellosis.disability_weight')
+            EntityKey(project_globals.SHIGELLA_DISABILITY_WEIGHT)
         ),
-        EntityKey('covariate.dtp3_coverage_proportion.estimate'): (
+        EntityKey(project_globals.COVARIATE_DTP3): (
             load_forecast_data,
-            EntityKey('covariate.dtp3_coverage_proportion.estimate')
+            EntityKey(project_globals.COVARIATE_DTP3)
         ),
-        EntityKey('covariate.measles_vaccine_coverage_proportion.estimate'): (
+        EntityKey(project_globals.COVARIATE_MEASLES1): (
             load_forecast_data,
-            EntityKey('covariate.measles_vaccine_coverage_proportion.estimate')
+            EntityKey(project_globals.COVARIATE_MEASLES1)
         ),
-        EntityKey('covariate.measles_vaccine_coverage_2_doses_proportion.estimate'): (
+        EntityKey(project_globals.COVARIATE_MEASLES2): (
             load_forecast_data,
-            EntityKey('covariate.measles_vaccine_coverage_2_doses_proportion.estimate')
+            EntityKey(project_globals.COVARIATE_MEASLES2)
         ),
     }
     loader, access_key = mapping[lookup_key]
@@ -158,7 +158,7 @@ def load_location_specific_life_expectancy(key: EntityKey, location: str):
 def load_live_births_by_year(key: EntityKey, location: str):
     location_id = extract.get_location_id(location)
     asfr_key = EntityKey('covariate.age_specific_fertility_rate.estimate')
-    pop_key = EntityKey('population.structure')
+    pop_key = EntityKey(project_globals.POPULATION_STRUCTURE)
 
     asfr_data = extract.load_forecast_from_xarray(paths.forecast_data_path(asfr_key), location_id)
     asfr_data = asfr_data[(asfr_data.scenario == project_globals.FORECASTING_SCENARIO)
