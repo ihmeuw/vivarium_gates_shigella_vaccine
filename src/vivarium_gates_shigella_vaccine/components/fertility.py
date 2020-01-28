@@ -72,6 +72,7 @@ class FertilityCrudeBirthRate:
                   .drop(columns='year_end')
                   .set_index('year_start'))
         pop = builder.data.load('population.structure')
+        pop = pop[pop.age_end <= builder.configuration.population.age_end]
         pop = pop.groupby(['year_start'])['value'].sum()
         pop = pop.at[start_year]
         live_birth_rate = (initial_population_size / pop) * births
