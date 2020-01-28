@@ -66,29 +66,43 @@ class ShigellaCoverage:
 
         age_eligible = self.dose_age_mask(pop, project_globals.DOSES.FIRST, event.step_size)
 
-        pop = self.dose(pop, dose=project_globals.DOSES.FIRST, prior_dose=project_globals.DOSES.NONE,
+        pop = self.dose(pop,
+                        dose=project_globals.DOSES.FIRST,
+                        prior_dose=project_globals.DOSES.NONE,
                         age_mask=age_eligible, event_time=event.time)
 
         age_eligible = self.dose_age_mask(pop, project_globals.DOSES.SECOND, event.step_size)
 
-        pop = self.dose(pop, dose=project_globals.DOSES.SECOND, prior_dose=project_globals.DOSES.FIRST,
+        pop = self.dose(pop,
+                        dose=project_globals.DOSES.SECOND,
+                        prior_dose=project_globals.DOSES.FIRST,
                         age_mask=age_eligible, event_time=event.time)
-        pop = self.dose(pop, dose=project_globals.DOSES.CATCHUP, prior_dose=project_globals.DOSES.NONE,
+        pop = self.dose(pop,
+                        dose=project_globals.DOSES.CATCHUP,
+                        prior_dose=project_globals.DOSES.NONE,
                         age_mask=age_eligible, event_time=event.time)
 
         if self.schedule == project_globals.SCHEDULES.NINE_TWELVE_FIFTEEN:
             age_eligible = self.dose_age_mask(pop, project_globals.DOSES.THIRD, event.step_size)
 
-            pop = self.dose(pop, dose=project_globals.DOSES.THIRD, prior_dose=project_globals.DOSES.SECOND,
+            pop = self.dose(pop,
+                            dose=project_globals.DOSES.THIRD,
+                            prior_dose=project_globals.DOSES.SECOND,
                             age_mask=age_eligible, event_time=event.time)
             # Got first, missed second
-            pop = self.dose(pop, dose=project_globals.DOSES.CATCHUP, prior_dose=project_globals.DOSES.FIRST,
+            pop = self.dose(pop,
+                            dose=project_globals.DOSES.LATE_CATCHUP_MISSED_2,
+                            prior_dose=project_globals.DOSES.FIRST,
                             age_mask=age_eligible, event_time=event.time)
             # Missed first, got second
-            pop = self.dose(pop, dose=project_globals.DOSES.CATCHUP, prior_dose=project_globals.DOSES.CATCHUP,
+            pop = self.dose(pop,
+                            dose=project_globals.DOSES.LATE_CATCHUP_MISSED_1,
+                            prior_dose=project_globals.DOSES.CATCHUP,
                             age_mask=age_eligible, event_time=event.time)
             # Missed first, missed, second
-            pop = self.dose(pop, dose=project_globals.DOSES.CATCHUP, prior_dose=project_globals.DOSES.NONE,
+            pop = self.dose(pop,
+                            dose=project_globals.DOSES.LATE_CATCHUP_MISSED_1_2,
+                            prior_dose=project_globals.DOSES.NONE,
                             age_mask=age_eligible, event_time=event.time)
 
         self.population_view.update(pop)
