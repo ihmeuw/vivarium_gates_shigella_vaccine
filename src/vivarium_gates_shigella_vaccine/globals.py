@@ -1,4 +1,4 @@
-from enum import Enum
+from typing import NamedTuple
 
 PROJECT_NAME = 'vivarium_gates_shigella_vaccine'
 CLUSTER_PROJECT = 'proj_cost_effect_diarrhea'
@@ -74,18 +74,24 @@ SHIGELLA_RESTRICTIONS = 'cause.shigellosis.restrictions'
 SHIGELLA_VACCINE = 'shigellosis_vaccine'
 
 
-class SCHEDULES(Enum):
-    SIX_NINE = '6_9'
-    NINE_TWELVE = '9_12'
-    NINE_TWELVE_FIFTEEN = '9_12_15'
+class __SCHEDULES(NamedTuple):
+    SIX_NINE: str = '6_9'
+    NINE_TWELVE: str = '9_12'
+    NINE_TWELVE_FIFTEEN: str = '9_12_15'
 
 
-class DOSES(Enum):
-    NONE = 'none'
-    FIRST = 'first'
-    SECOND = 'second'
-    THIRD = 'third'
-    CATCHUP = 'catchup'
-    LATE_CATCHUP_MISSED_1 = 'late_catchup_missed_1'
-    LATE_CATCHUP_MISSED_2 = 'late_catchup_missed_2'
-    LATE_CATCHUP_MISSED_1_2 = 'late_catchup_missed_1_2'
+SCHEDULES = __SCHEDULES()
+
+
+class __DOSES(NamedTuple):
+    NONE: str = 'none'
+    FIRST: str = 'first'
+    SECOND: str = 'second'
+    THIRD: str = 'third'
+    CATCHUP: str = 'catchup'
+    LATE_CATCHUP_MISSED_1: str = 'late_catchup_missed_1'
+    LATE_CATCHUP_MISSED_2: str = 'late_catchup_missed_2'
+    LATE_CATCHUP_MISSED_1_2: str = 'late_catchup_missed_1_2'
+
+
+DOSES = __DOSES()
