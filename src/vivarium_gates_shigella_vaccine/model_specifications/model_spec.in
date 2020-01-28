@@ -7,12 +7,13 @@ components:
             - SIS('shigellosis')
         metrics:
             - DisabilityObserver()
-            - MortalityObserver()
+            - DiseaseObserver('shigellosis')
     vivarium_gates_shigella_vaccine.components:
         - FertilityCrudeBirthRate()
         - ShigellaCoverage()
         - ShigellaEffect()
         - ShigellaVaccineObserver()
+        - LocationSpecificMortalityObserver()
 
 configuration:
     input_data:
