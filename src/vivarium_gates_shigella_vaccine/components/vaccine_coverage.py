@@ -75,11 +75,14 @@ class ShigellaCoverage:
 
             pop = self.dose(pop, dose='third', prior_dose='second', age_mask=age_eligible, event_time=event.time)
             # Got first, missed second
-            pop = self.dose(pop, dose='catchup', prior_dose='first', age_mask=age_eligible, event_time=event.time)
+            pop = self.dose(pop, dose='catchup', prior_dose='first', age_mask=age_eligible, event_time=event.time,
+                            label='late_catchup_missed_2')
             # Missed first, got second
-            pop = self.dose(pop, dose='catchup', prior_dose='catchup', age_mask=age_eligible, event_time=event.time)
+            pop = self.dose(pop, dose='catchup', prior_dose='catchup', age_mask=age_eligible, event_time=event.time,
+                            label='late_catchup_missed_1')
             # Missed first, missed, second
-            pop = self.dose(pop, dose='catchup', prior_dose='none', age_mask=age_eligible, event_time=event.time)
+            pop = self.dose(pop, dose='catchup', prior_dose='none', age_mask=age_eligible, event_time=event.time,
+                            label='late_catchup_missed_1_2')
 
         self.population_view.update(pop)
 
@@ -102,12 +105,12 @@ class ShigellaCoverage:
         dose_age = self.dose_ages.loc[pop.index, dose]
         return (pop.age < dose_age) & (dose_age <= pop.age + to_years(step_size))
 
-    def dose(self, pop, dose, prior_dose, age_mask, event_time):
+    def dose(self, pop, dose, prior_dose, age_mask, event_time, label=None):
         dose_eligible = pop[(pop.vaccine_dose == prior_dose) & age_mask]
         dose_coverage = self.coverage[dose](dose_eligible.index)
         received_dose = self.dose_randomness.filter_for_probability(dose_eligible.index, dose_coverage,
                                                                     additional_key=dose)
-        pop.loc[received_dose, 'vaccine_dose'] = dose
+        pop.loc[received_dose, 'vaccine_dose'] = label if label is not None else dose
         pop.loc[received_dose, 'vaccine_dose_count'] += 1
         pop.loc[received_dose, 'vaccine_event_time'] = event_time
         return pop

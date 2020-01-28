@@ -12,6 +12,7 @@ components:
         - FertilityCrudeBirthRate()
         - ShigellaCoverage()
         - ShigellaEffect()
+        - ShigellaVaccineObserver()
 
 configuration:
     input_data:
