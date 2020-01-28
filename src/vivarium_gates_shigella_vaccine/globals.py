@@ -52,12 +52,13 @@ COVARIATE_SHIGELLA_6MO = 'covariate.shigella_vaccine_6mo.coverage'
 COVARIATE_SHIGELLA_9MO = 'covariate.shigella_vaccine_9mo.coverage'
 COVARIATE_SHIGELLA_12MO = 'covariate.shigella_vaccine_12mo.coverage'
 COVARIATE_SHIGELLA_15MO = 'covariate.shigella_vaccine_15mo.coverage'
-COVARIATE_SHIGELLA_COVERAGES = {
-    6: COVARIATE_SHIGELLA_6MO,
-    9: COVARIATE_SHIGELLA_9MO,
-    12: COVARIATE_SHIGELLA_12MO,
-    15: COVARIATE_SHIGELLA_15MO
-}
+COVARIATE_SHIGELLA_COVERAGES = [
+    COVARIATE_SHIGELLA_6MO,
+    COVARIATE_SHIGELLA_9MO,
+    COVARIATE_SHIGELLA_12MO,
+    COVARIATE_SHIGELLA_15MO
+]
+
 
 ALL_CAUSE_CSMR = 'cause.all_causes.cause_specific_mortality_rate'
 

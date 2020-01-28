@@ -141,17 +141,17 @@ class ShigellaCoverage:
         catchup_proportion = self.sample_catchup_proportion(builder)
 
         coverage = {}
-        for month, data_key in project_globals.COVARIATE_SHIGELLA_COVERAGES.items():
-            data = builder.data.load(data_key)
+        for key in project_globals.COVARIATE_SHIGELLA_COVERAGES:
+            data = builder.data.load(key)
             # Vaccine coverage does not vary by age or sex.
             data = data[(data.age_start == 0) & (data.sex == 'Female')].drop(columns=['age_start', 'age_end', 'sex'])
             data = data.set_index(['year_start', 'year_end']).value
-            coverage[month] = data
+            coverage[key] = data
 
         dose_coverage = {}
         if schedule == project_globals.SCHEDULES.SIX_NINE:
-            first = coverage[6]
-            second = coverage[9]
+            first = coverage[project_globals.COVARIATE_SHIGELLA_6MO]
+            second = coverage[project_globals.COVARIATE_SHIGELLA_9MO]
             # Since these coverages come from two different schedules,
             # We treat the probability of receiving dose 2 independently from
             # whether the person received dose 1.
@@ -160,16 +160,16 @@ class ShigellaCoverage:
             dose_coverage[project_globals.DOSES.CATCHUP] = second
 
         elif schedule == project_globals.SCHEDULES.NINE_TWELVE:
-            first = coverage[9]
-            second = coverage[12]
+            first = coverage[project_globals.COVARIATE_SHIGELLA_9MO]
+            second = coverage[project_globals.COVARIATE_SHIGELLA_12MO]
             dose_coverage[project_globals.DOSES.FIRST] = first
             dose_coverage[project_globals.DOSES.SECOND] = second / first
             dose_coverage[project_globals.DOSES.CATCHUP] = catchup_proportion
 
         elif schedule == project_globals.SCHEDULES.NINE_TWELVE_FIFTEEN:
-            first = coverage[9]
-            second = coverage[12]
-            third = coverage[15]
+            first = coverage[project_globals.COVARIATE_SHIGELLA_9MO]
+            second = coverage[project_globals.COVARIATE_SHIGELLA_12MO]
+            third = coverage[project_globals.COVARIATE_SHIGELLA_15MO]
 
             dose_coverage[project_globals.DOSES.FIRST] = first
             dose_coverage[project_globals.DOSES.SECOND] = second / first
