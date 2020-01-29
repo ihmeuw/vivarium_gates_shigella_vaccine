@@ -10,14 +10,7 @@ class ShigellaEffect:
 
     configuration_defaults = {
         project_globals.SHIGELLA_VACCINE: {
-            'immunity_duration': 720,
-            'efficacy': {
-                'mean': .5,
-                'sd': .1
-            },
-            'single_dose_protected': 0.7,
-            'waning_rate': 0.038,
-            'onset_delay': 14,
+            'scenario': project_globals.SCENARIOS.REFERENCE
         }
     }
 
@@ -26,11 +19,12 @@ class ShigellaEffect:
 
     def setup(self, builder):
         self.clock = builder.time.clock()
-        self.immunity_duration = pd.Timedelta(days=builder.configuration.shigellosis_vaccine.immunity_duration)
-        self.efficacy = self.sample_efficacy(builder)
-        self.single_dose_proportion_protected = builder.configuration.shigellosis_vaccine.single_dose_protected
-        self.waning_rate = builder.configuration.shigellosis_vaccine.waning_rate
-        self.onset_delay = pd.Timedelta(days=builder.configuration.shigellosis_vaccine.onset_delay)
+        config = self.get_configuration(builder.configuration.shigellosis_vaccine.scenario)
+        self.immunity_duration = pd.Timedelta(days=config['immunity_duration'])
+        self.efficacy = self.sample_efficacy(builder, config)
+        self.single_dose_proportion_protected = config['single_dose_protected']
+        self.waning_rate = config['waning_rate']
+        self.onset_delay = pd.Timedelta(days=config['onset_delay'])
 
         self.doses_for_protection = pd.Series()
 
@@ -66,10 +60,49 @@ class ShigellaEffect:
         return incidence_rate * (1 - protection)
 
     @staticmethod
-    def sample_efficacy(builder):
+    def sample_efficacy(builder, config):
         draw = str(builder.configuration.input_data.input_draw_number)
         stream = builder.randomness.get_stream('shigella_vaccine_efficacy')
         seed = stream.get_seed(draw)
-        mu = builder.configuration.shigellosis_vaccine.efficacy.mean
-        sigma = builder.configuration.shigellosis_vaccine.efficacy.sd
+        mu = config['mean']
+        sigma = config['sd']
         return sample_beta(seed, mu, sigma)
+
+    @staticmethod
+    def get_configuration(scenario: str):
+        config = {
+            'immunity_duration': 720,
+            'efficacy': {
+                'mean': .5,
+                'sd': .1
+            },
+            'single_dose_protected': 0.7,
+            'waning_rate': 0.038,
+            'onset_delay': 14,
+        }
+        optimistic_duration = 1460
+        optimistic_efficacy = {
+            'mean': 0.7,
+            'sd': 0.15
+        }
+        optimistic_waning = 0.0134
+
+        if scenario == project_globals.SCENARIOS.REFERENCE:
+            update = {}
+        elif scenario == project_globals.SCENARIOS.OPTIMISTIC:
+            update = {'duration': optimistic_duration,
+                      'efficacy': optimistic_efficacy,
+                      'waning_rate': optimistic_waning}
+        elif scenario == project_globals.SCENARIOS.SENSITIVITY_DURATION:
+            update = {'immunity_duration': optimistic_duration}
+        elif scenario == project_globals.SCENARIOS.SENSITIVITY_EFFICACY:
+            update = {'efficacy': optimistic_efficacy}
+        elif scenario == project_globals.SCENARIOS.SENSITIVITY_WANING:
+            update = {'waning_rate': optimistic_waning}
+        else:
+            raise ValueError(f'Invalid scenario specified.  Scenario must be one of '
+                             f'{list(project_globals.SCENARIOS)}')
+
+        config.update(update)
+        return config
+
