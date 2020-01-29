@@ -48,7 +48,7 @@ class ShigellaVaccineObserver:
         pop = pop.loc[pop[f'vaccine_event_time'] == event.time]
 
         dose_counts = {}
-        for dose in project_globals.DOSES:
+        for dose in project_globals.VACCINE_DOSES:
             dose_filter = base_filter + f'vaccine_dose == "{dose}"'
             group_counts = get_group_counts(pop, dose_filter, base_key, self.config, self.age_bins)
             for group_key, count in group_counts.items():
