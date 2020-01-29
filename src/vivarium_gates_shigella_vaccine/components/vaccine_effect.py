@@ -64,8 +64,8 @@ class ShigellaEffect:
         draw = str(builder.configuration.input_data.input_draw_number)
         stream = builder.randomness.get_stream('shigella_vaccine_efficacy')
         seed = stream.get_seed(draw)
-        mu = config['mean']
-        sigma = config['sd']
+        mu = config['efficacy']['mean']
+        sigma = config['efficacy']['sd']
         return sample_beta(seed, mu, sigma)
 
     @staticmethod
