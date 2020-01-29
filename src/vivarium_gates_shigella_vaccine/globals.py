@@ -1,3 +1,4 @@
+import itertools
 from typing import NamedTuple
 
 PROJECT_NAME = 'vivarium_gates_shigella_vaccine'
@@ -75,6 +76,17 @@ SHIGELLA_RESTRICTIONS = 'cause.shigellosis.restrictions'
 SHIGELLA_VACCINE = 'shigellosis_vaccine'
 
 
+class __SCENARIOS(NamedTuple):
+    REFERENCE: str = 'reference'
+    OPTIMISTIC: str = 'optimistic'
+    SENSITIVITY_DURATION: str = 'sensitivity_duration'
+    SENSITIVITY_EFFICACY: str = 'sensitivity_efficacy'
+    SENSITIVITY_WANING: str = 'sensitivity_waning'
+
+
+SCENARIOS = __SCENARIOS()
+
+
 class __SCHEDULES(NamedTuple):
     SIX_NINE: str = '6_9'
     NINE_TWELVE: str = '9_12'
@@ -96,3 +108,77 @@ class __DOSES(NamedTuple):
 
 
 DOSES = __DOSES()
+VACCINE_DOSES = DOSES[1:]
+
+# Result column constants
+
+TOTAL_POP_COLUMN = 'total_population'
+TOTAL_YLLS_COLUMN = 'years_of_life_lost'
+TOTAL_YLDS_COLUMN = 'years_lived_with_disability'
+RANDOM_SEED_COLUMN = 'random_seed'
+INPUT_DRAW_COLUMN = 'input_draw'
+
+
+STANDARD_COLUMNS = {'total_population': TOTAL_POP_COLUMN,
+                    'total_ylls': TOTAL_YLLS_COLUMN,
+                    'total_ylds': TOTAL_YLDS_COLUMN,
+                    'random_seed': RANDOM_SEED_COLUMN,
+                    'input_draw': INPUT_DRAW_COLUMN}
+
+TOTAL_POP_COLUMN_TEMPLATE = 'total_population_{POP_STATE}'
+PERSON_TIME_COLUMN_TEMPLATE = 'person_time_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+YLDS_COLUMN_TEMPLATE = 'ylds_due_to_{CAUSE_OF_DISABILITY_STATE}_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+DEATH_COLUMN_TEMPLATE = 'deaths_due_to_{CAUSE_OF_DEATH_STATE}_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+YLLS_COLUMN_TEMPLATE = 'ylls_due_to_{CAUSE_OF_DEATH_STATE}_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+LOCATION_SPECIFIC_YLLS_COLUMN_TEMPLATE = 'location_specific_ylls_due_to_{CAUSE_OF_DEATH_STATE}_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+
+DISEASE_EVENTS_COLUMN_TEMPLATE = '{DISEASE_STATE}_counts_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+PREVALENT_CASES_COLUMN_TEMPLATE = '{DISEASE_STATE}_prevalent_cases_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+SUSCEPTIBLE_PERSON_TIME_COLUMN_TEMPLATE = '{DISEASE_STATE}_susceptible_person_time_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+VACCINE_COUNT_COLUMN_TEMPLATE = 'shigellosis_vaccine_{VACCINE_DOSE}_dose_count_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+
+
+COLUMN_TEMPLATES = {'total_population': TOTAL_POP_COLUMN_TEMPLATE,
+                    'person_time': PERSON_TIME_COLUMN_TEMPLATE,
+                    'ylds': YLDS_COLUMN_TEMPLATE,
+                    'deaths': DEATH_COLUMN_TEMPLATE,
+                    'ylls': YLLS_COLUMN_TEMPLATE,
+                    'location_specific_ylls': LOCATION_SPECIFIC_YLLS_COLUMN_TEMPLATE,
+                    'disease_events': DISEASE_EVENTS_COLUMN_TEMPLATE,
+                    'prevalent_cases': PREVALENT_CASES_COLUMN_TEMPLATE,
+                    'susceptible_person_time': SUSCEPTIBLE_PERSON_TIME_COLUMN_TEMPLATE,
+                    'vaccine_counts': VACCINE_COUNT_COLUMN_TEMPLATE}
+
+SEXES = ['male', 'female']
+AGE_GROUPS = ['early_neonatal', 'late_neonatal', 'post_neonatal', '1_to_4']
+YEARS = list(range(2025, 2041))
+POP_STATES = ['tracked', 'untracked', 'living', 'dead']
+DISEASE_STATES = ['shigellosis']
+CAUSE_OF_DEATH_STATES = ['shigellosis', 'other_causes']
+CAUSE_OF_DISABILITY_STATES = DISEASE_STATES[:]
+
+
+TEMPLATE_FIELD_MAP = {'SEX': SEXES,
+                      'AGE_GROUP': AGE_GROUPS,
+                      'YEAR': YEARS,
+                      'POP_STATE': POP_STATES,
+                      'CAUSE_OF_DISABILITY_STATE': CAUSE_OF_DISABILITY_STATES,
+                      'CAUSE_OF_DEATH_STATE': CAUSE_OF_DEATH_STATES,
+                      'DISEASE_STATE': DISEASE_STATES}
+
+
+def RESULT_COLUMNS(kind='all'):
+    if kind not in COLUMN_TEMPLATES and kind != 'all':
+        raise ValueError(f'Unknown result column type {kind}')
+    columns = []
+    if kind == 'all':
+        for k in COLUMN_TEMPLATES:
+            columns += RESULT_COLUMNS(k)
+        columns = list(STANDARD_COLUMNS.values()) + columns
+    else:
+        template = COLUMN_TEMPLATES[kind]
+        filtered_field_map = {field: values for field, values in TEMPLATE_FIELD_MAP.items() if field in template}
+        fields, value_groups = filtered_field_map.keys(), itertools.product(*filtered_field_map.values())
+        for value_group in value_groups:
+            columns.append(template.format(**{field: value for field, value in zip(fields, value_group)}))
+    return columns
