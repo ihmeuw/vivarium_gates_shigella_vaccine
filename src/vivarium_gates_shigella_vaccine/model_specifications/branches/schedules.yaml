@@ -4,4 +4,4 @@ random_seed_count: 5
 branches:
   - shigellosis_vaccine:
       schedule: ['6_9', '9_12', '9_12_15']
-      scenario: ['reference', 'optimistic', 'sensitivity_duration', 'sensitivity_efficacy', 'sensitivity_waning']
+      scenario: ['reference', 'optimistic']
