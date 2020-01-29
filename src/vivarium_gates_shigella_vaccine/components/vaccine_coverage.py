@@ -164,7 +164,7 @@ class ShigellaCoverage:
             second = coverage[project_globals.COVARIATE_SHIGELLA_12MO]
             dose_coverage[project_globals.DOSES.FIRST] = first
             dose_coverage[project_globals.DOSES.SECOND] = second / first
-            dose_coverage[project_globals.DOSES.CATCHUP] = catchup_proportion
+            dose_coverage[project_globals.DOSES.CATCHUP] = pd.Series(catchup_proportion, index=first.index)
 
         elif schedule == project_globals.SCHEDULES.NINE_TWELVE_FIFTEEN:
             first = coverage[project_globals.COVARIATE_SHIGELLA_9MO]
@@ -174,17 +174,13 @@ class ShigellaCoverage:
             dose_coverage[project_globals.DOSES.FIRST] = first
             dose_coverage[project_globals.DOSES.SECOND] = second / first
             dose_coverage[project_globals.DOSES.THIRD] = third / (second / first)
-            dose_coverage[project_globals.DOSES.CATCHUP] = catchup_proportion
-            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1] = catchup_proportion
-            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_2] = catchup_proportion
-            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1_2] = catchup_proportion
+            dose_coverage[project_globals.DOSES.CATCHUP] = pd.Series(catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1] = pd.Series(catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_2] = pd.Series(catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1_2] = pd.Series(catchup_proportion, index=first.index)
 
         else:
             raise ValueError(f'Unknown vaccine schedule {schedule}.')
-
-        for dose, cov in dose_coverage.items():
-            if any(cov < 0) or any(cov > 1):
-                raise ValueError
 
         return dose_coverage
 
