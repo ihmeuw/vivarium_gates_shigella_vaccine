@@ -10,7 +10,7 @@ class ShigellaCoverage:
 
     configuration_defaults = {
         project_globals.SHIGELLA_VACCINE: {
-            'schedule': project_globals.SCHEDULES.SIX_NINE,
+            'schedule': project_globals.SCHEDULES.NONE,
             'catchup_fraction': {
                 'mean': 0.34,
                 'sd': 0.21,
@@ -62,6 +62,9 @@ class ShigellaCoverage:
         }, index=pop_data.index))
 
     def on_time_step(self, event):
+        if self.schedule == project_globals.SCHEDULES.NONE:
+            return
+
         pop = self.population_view.get(event.index, query='alive == "alive"')
 
         age_eligible = self.dose_age_mask(pop, project_globals.DOSES.FIRST, event.step_size)
@@ -149,7 +152,9 @@ class ShigellaCoverage:
             coverage[key] = data
 
         dose_coverage = {}
-        if schedule == project_globals.SCHEDULES.SIX_NINE:
+        if schedule == project_globals.SCHEDULES.NONE:
+            pass
+        elif schedule == project_globals.SCHEDULES.SIX_NINE:
             first = coverage[project_globals.COVARIATE_SHIGELLA_6MO]
             second = coverage[project_globals.COVARIATE_SHIGELLA_9MO]
             # Since these coverages come from two different schedules,
@@ -178,7 +183,6 @@ class ShigellaCoverage:
             dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1] = pd.Series(catchup_proportion, index=first.index)
             dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_2] = pd.Series(catchup_proportion, index=first.index)
             dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1_2] = pd.Series(catchup_proportion, index=first.index)
-
         else:
             raise ValueError(f'Unknown vaccine schedule {schedule}.')
 
@@ -202,6 +206,7 @@ class ShigellaCoverage:
         fifteen = [to_years(450), to_years(480)]
 
         age_ranges = {
+            project_globals.SCHEDULES.NONE: {},
             project_globals.SCHEDULES.SIX_NINE: {
                 project_globals.DOSES.FIRST: six,
                 project_globals.DOSES.SECOND: nine,
