@@ -10,7 +10,7 @@ class ShigellaEffect:
 
     configuration_defaults = {
         project_globals.SHIGELLA_VACCINE: {
-            'scenario': project_globals.SCENARIOS.REFERENCE
+            'scenario': project_globals.SCENARIOS.BASELINE
         }
     }
 
@@ -87,7 +87,9 @@ class ShigellaEffect:
         }
         optimistic_waning = 0.0134
 
-        if scenario == project_globals.SCENARIOS.REFERENCE:
+        if scenario == project_globals.SCENARIOS.BASELINE:
+            update = {}  # No one will receive a dose, so no update needed.
+        elif scenario == project_globals.SCENARIOS.REFERENCE:
             update = {}
         elif scenario == project_globals.SCENARIOS.OPTIMISTIC:
             update = {'duration': optimistic_duration,

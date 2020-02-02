@@ -77,6 +77,7 @@ SHIGELLA_VACCINE = 'shigellosis_vaccine'
 
 
 class __SCENARIOS(NamedTuple):
+    BASELINE: str = 'baseline'
     REFERENCE: str = 'reference'
     OPTIMISTIC: str = 'optimistic'
     SENSITIVITY_DURATION: str = 'sensitivity_duration'
@@ -88,6 +89,7 @@ SCENARIOS = __SCENARIOS()
 
 
 class __SCHEDULES(NamedTuple):
+    NONE: str = 'none'
     SIX_NINE: str = '6_9'
     NINE_TWELVE: str = '9_12'
     NINE_TWELVE_FIFTEEN: str = '9_12_15'
