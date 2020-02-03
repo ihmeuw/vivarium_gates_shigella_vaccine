@@ -3,9 +3,6 @@ random_seed_count: 5
 
 branches:
   - shigellosis_vaccine:
-      schedule: 'none'
-      scenario: 'baseline'
-  - shigellosis_vaccine:
       schedule: ['6_9', '9_12', '9_12_15']
       scenario: ['reference', 'optimistic']
   - shigellosis_vaccine:
