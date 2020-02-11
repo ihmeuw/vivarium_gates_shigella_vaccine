@@ -134,7 +134,7 @@ def load_and_write_vaccine_data(artifact: Artifact, location: str):
     measles2_coverage = loader.get_data(key, location)
 
     key = EntityKey(project_globals.COVARIATE_SHIGELLA_6MO)
-    write_data(artifact, key, 0.5 * (dtp3_coverage + measles1_coverag))
+    write_data(artifact, key, 0.5 * (dtp3_coverage + measles1_coverage))
 
     key = EntityKey(project_globals.COVARIATE_SHIGELLA_9MO)
     write_data(artifact, key, measles1_coverage)
