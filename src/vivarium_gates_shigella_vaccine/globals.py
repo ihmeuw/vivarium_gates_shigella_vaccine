@@ -111,6 +111,8 @@ class __DOSES(NamedTuple):
 
 DOSES = __DOSES()
 VACCINE_DOSES = DOSES[1:]
+DOSE_MONTHS = (6, 9, 12, 15)
+DAYS_PER_YEAR = 365.25
 
 # Result column constants
 
@@ -137,7 +139,8 @@ LOCATION_SPECIFIC_YLLS_COLUMN_TEMPLATE = 'location_specific_ylls_due_to_{CAUSE_O
 DISEASE_EVENTS_COLUMN_TEMPLATE = '{DISEASE_STATE}_counts_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
 PREVALENT_CASES_COLUMN_TEMPLATE = '{DISEASE_STATE}_prevalent_cases_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
 SUSCEPTIBLE_PERSON_TIME_COLUMN_TEMPLATE = '{DISEASE_STATE}_susceptible_person_time_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
-VACCINE_COUNT_COLUMN_TEMPLATE = 'shigellosis_vaccine_{VACCINE_DOSE}_dose_count_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+VACCINE_COUNT_COLUMN_TEMPLATE = 'shigellosis_vaccine_{VACCINE_DOSE}_dose_count'
+VACCINE_ELIGIBLE_COUNT_COLUMN_TEMPLATE = 'persons_eligible_for_dose_at_{DOSE_MONTH}_months'
 
 
 COLUMN_TEMPLATES = {'total_population': TOTAL_POP_COLUMN_TEMPLATE,
@@ -149,7 +152,8 @@ COLUMN_TEMPLATES = {'total_population': TOTAL_POP_COLUMN_TEMPLATE,
                     'disease_events': DISEASE_EVENTS_COLUMN_TEMPLATE,
                     'prevalent_cases': PREVALENT_CASES_COLUMN_TEMPLATE,
                     'susceptible_person_time': SUSCEPTIBLE_PERSON_TIME_COLUMN_TEMPLATE,
-                    'vaccine_counts': VACCINE_COUNT_COLUMN_TEMPLATE}
+                    'vaccine_counts': VACCINE_COUNT_COLUMN_TEMPLATE,
+                    'vaccine_eligible_counts': VACCINE_ELIGIBLE_COUNT_COLUMN_TEMPLATE}
 
 SEXES = ['male', 'female']
 AGE_GROUPS = ['early_neonatal', 'late_neonatal', 'post_neonatal', '1_to_4']

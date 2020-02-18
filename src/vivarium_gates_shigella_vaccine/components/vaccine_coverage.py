@@ -1,8 +1,9 @@
+from collections import Counter
+
 import pandas as pd
 import scipy.stats
 
 from vivarium_gates_shigella_vaccine import globals as project_globals
-
 from .utilities import sample_beta, to_years
 
 
@@ -27,6 +28,7 @@ class ShigellaCoverage:
 
     def setup(self, builder):
         self.schedule = builder.configuration.shigellosis_vaccine.schedule
+        self.counts = Counter()
 
         self.coverage = {}
         for dose, coverage in self.get_dose_coverages(builder).items():
@@ -51,6 +53,7 @@ class ShigellaCoverage:
                                                  requires_streams=[f'{self.name}_dose_age'])
 
         builder.event.register_listener('time_step', self.on_time_step)
+        builder.value.register_value_modifier('metrics', self.metrics)
 
     def on_initialize_simulants(self, pop_data):
         self.dose_ages = self.dose_ages.append(self.sample_ages(pop_data.index))
@@ -62,7 +65,9 @@ class ShigellaCoverage:
         }, index=pop_data.index))
 
     def on_time_step(self, event):
+        counts = {f'eligible_for_{dose}_dose_count': 0 for dose in project_globals.VACCINE_DOSES}
         if self.schedule == project_globals.SCHEDULES.NONE:
+            self.counts.update(counts)
             return
 
         pop = self.population_view.get(event.index, query='alive == "alive"')
@@ -72,18 +77,18 @@ class ShigellaCoverage:
         pop = self.dose(pop,
                         dose=project_globals.DOSES.FIRST,
                         prior_dose=project_globals.DOSES.NONE,
-                        age_mask=age_eligible, event_time=event.time)
+                        age_mask=age_eligible, event_time=event.time, counts=counts)
 
         age_eligible = self.dose_age_mask(pop, project_globals.DOSES.SECOND, event.step_size)
 
         pop = self.dose(pop,
                         dose=project_globals.DOSES.SECOND,
                         prior_dose=project_globals.DOSES.FIRST,
-                        age_mask=age_eligible, event_time=event.time)
+                        age_mask=age_eligible, event_time=event.time, counts=counts)
         pop = self.dose(pop,
                         dose=project_globals.DOSES.CATCHUP,
                         prior_dose=project_globals.DOSES.NONE,
-                        age_mask=age_eligible, event_time=event.time)
+                        age_mask=age_eligible, event_time=event.time, counts=counts)
 
         if self.schedule == project_globals.SCHEDULES.NINE_TWELVE_FIFTEEN:
             age_eligible = self.dose_age_mask(pop, project_globals.DOSES.THIRD, event.step_size)
@@ -91,23 +96,24 @@ class ShigellaCoverage:
             pop = self.dose(pop,
                             dose=project_globals.DOSES.THIRD,
                             prior_dose=project_globals.DOSES.SECOND,
-                            age_mask=age_eligible, event_time=event.time)
+                            age_mask=age_eligible, event_time=event.time, counts=counts)
             # Got first, missed second
             pop = self.dose(pop,
                             dose=project_globals.DOSES.LATE_CATCHUP_MISSED_2,
                             prior_dose=project_globals.DOSES.FIRST,
-                            age_mask=age_eligible, event_time=event.time)
+                            age_mask=age_eligible, event_time=event.time, counts=counts)
             # Missed first, got second
             pop = self.dose(pop,
                             dose=project_globals.DOSES.LATE_CATCHUP_MISSED_1,
                             prior_dose=project_globals.DOSES.CATCHUP,
-                            age_mask=age_eligible, event_time=event.time)
+                            age_mask=age_eligible, event_time=event.time, counts=counts)
             # Missed first, missed, second
             pop = self.dose(pop,
                             dose=project_globals.DOSES.LATE_CATCHUP_MISSED_1_2,
                             prior_dose=project_globals.DOSES.NONE,
-                            age_mask=age_eligible, event_time=event.time)
+                            age_mask=age_eligible, event_time=event.time, counts=counts)
 
+        self.counts.update(counts)
         self.population_view.update(pop)
 
     def sample_ages(self, index):
@@ -129,8 +135,10 @@ class ShigellaCoverage:
         dose_age = self.dose_ages.loc[pop.index, dose]
         return (pop.age < dose_age) & (dose_age <= pop.age + to_years(step_size))
 
-    def dose(self, pop, dose, prior_dose, age_mask, event_time):
+    def dose(self, pop, dose, prior_dose, age_mask, event_time, counts):
         dose_eligible = pop[(pop.vaccine_dose == prior_dose) & age_mask]
+        counts[f'eligible_for_{dose}_dose_count'] = len(dose_eligible)
+
         dose_coverage = self.coverage[dose](dose_eligible.index)
         received_dose = self.dose_randomness.filter_for_probability(dose_eligible.index, dose_coverage,
                                                                     additional_key=dose)
@@ -141,7 +149,7 @@ class ShigellaCoverage:
 
     def get_dose_coverages(self, builder):
         schedule = builder.configuration.shigellosis_vaccine.schedule
-        catchup_proportion = self.sample_catchup_proportion(builder)
+        self.catchup_proportion = self.sample_catchup_proportion(builder)
 
         coverage = {}
         for key in project_globals.COVARIATE_SHIGELLA_COVERAGES:
@@ -169,7 +177,7 @@ class ShigellaCoverage:
             second = coverage[project_globals.COVARIATE_SHIGELLA_12MO]
             dose_coverage[project_globals.DOSES.FIRST] = first
             dose_coverage[project_globals.DOSES.SECOND] = second / first
-            dose_coverage[project_globals.DOSES.CATCHUP] = pd.Series(catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.CATCHUP] = pd.Series(self.catchup_proportion, index=first.index)
 
         elif schedule == project_globals.SCHEDULES.NINE_TWELVE_FIFTEEN:
             first = coverage[project_globals.COVARIATE_SHIGELLA_9MO]
@@ -178,14 +186,13 @@ class ShigellaCoverage:
 
             dose_coverage[project_globals.DOSES.FIRST] = first
             dose_coverage[project_globals.DOSES.SECOND] = second / first
-            dose_coverage[project_globals.DOSES.THIRD] = third / (second / first)
-            dose_coverage[project_globals.DOSES.CATCHUP] = pd.Series(catchup_proportion, index=first.index)
-            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1] = pd.Series(catchup_proportion, index=first.index)
-            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_2] = pd.Series(catchup_proportion, index=first.index)
-            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1_2] = pd.Series(catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.THIRD] = third / second
+            dose_coverage[project_globals.DOSES.CATCHUP] = pd.Series(self.catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1] = pd.Series(self.catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_2] = pd.Series(self.catchup_proportion, index=first.index)
+            dose_coverage[project_globals.DOSES.LATE_CATCHUP_MISSED_1_2] = pd.Series(self.catchup_proportion, index=first.index)
         else:
             raise ValueError(f'Unknown vaccine schedule {schedule}.')
-
         return dose_coverage
 
     @staticmethod
@@ -222,3 +229,8 @@ class ShigellaCoverage:
             }
         }
         return age_ranges[schedule]
+
+    def metrics(self, index, metrics):
+        metrics['shigella_vaccine_catchup_proportion'] = self.catchup_proportion
+        metrics.update(self.counts)
+        return metrics

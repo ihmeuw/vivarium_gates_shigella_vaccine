@@ -55,9 +55,9 @@ configuration:
         onset_delay: 14
     metrics:
         shigellosis_vaccine_observer:
-                by_age: True
-                by_sex: True
-                by_year: True
+                by_age: False
+                by_sex: False
+                by_year: False
         shigellosis_observer:
                 by_age: True
                 by_sex: True
@@ -67,10 +67,6 @@ configuration:
                 by_sex: True
                 by_year: True
         disability:
-                by_age: True
-                by_sex: True
-                by_year: True
-        yll_forecast_observer:
                 by_age: True
                 by_sex: True
                 by_year: True
