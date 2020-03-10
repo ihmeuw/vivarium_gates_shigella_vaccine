@@ -1,0 +1,7 @@
+input_draw_count: 500
+random_seed_count: 5
+
+branches:
+  - shigellosis_vaccine:
+      schedule: '9_12'
+      scenario: ['sensitivity_duration', 'sensitivity_efficacy', 'sensitivity_waning']
